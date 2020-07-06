@@ -13,3 +13,8 @@ conda env create -f environment.yml
 conda activate diff_stokes_flow
 ./install.sh
 ```
+
+## Examples
+
+### Parametric shapes
+- `spline2d` shows the signed distance function of the 2D parametric spline.

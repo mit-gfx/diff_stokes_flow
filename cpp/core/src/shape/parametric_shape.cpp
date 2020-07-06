@@ -28,7 +28,6 @@ void ParametricShape<dim>::Initialize(const std::array<int, dim>& cell_nums, con
     params_ = params;
     param_num_ = static_cast<int>(params.size());
     signed_distances_ = std::vector<real>(node_num_prod_, 0);
-    ComputeSignedDistances();
 }
 
 template<int dim>
@@ -57,13 +56,23 @@ void ParametricShape<dim>::Backward(const std::vector<real>& dl_dsigned_distance
 
 template<int dim>
 void ParametricShape<dim>::ComputeSignedDistances() {
-    std::fill(signed_distances_.begin(), signed_distances_.end(), 0);
+    for (int i = 0; i < node_num_prod_; ++i) {
+        const auto idx = GetIndex(i);
+        std::array<real, dim> point;
+        for (int j = 0; j < dim; ++j) point[j] = static_cast<real>(idx[j]);
+        signed_distances_[i] = ComputeSignedDistance(point);
+    }
+}
+
+template<int dim>
+const real ParametricShape<dim>::ComputeSignedDistance(const std::array<real, dim>& point) {
+    return 0;
 }
 
 template<int dim>
 const int ParametricShape<dim>::GetIndex(const std::array<int, dim>& node_idx) const {
-    for (int i = 0; i < dim; ++i) CheckError(0 <= node_idx[i] && node_idx[i] < node_nums_[i],
-        "Node index out of bound.");
+    for (int i = 0; i < dim; ++i)
+        CheckError(0 <= node_idx[i] && node_idx[i] < node_nums_[i], "Node index out of bound.");
     int node_idx_linear = node_idx[0];
     for (int i = 0; i < dim - 1; ++i) {
         node_idx_linear *= node_nums_[i + 1];

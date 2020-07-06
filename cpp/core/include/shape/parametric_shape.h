@@ -7,13 +7,14 @@
 // (0, 0, 0) in 3D. The cell size is assumed to be 1. Each parametric shape induces a signed distance function f(p)
 // where p is a 2D or 3D point. f(p) >= 0 represents the boundary and interior of the shape. Moreover, we assume solid
 // (fluid) regions have positive (negative) distances to the surface of the shapes.
+// If the boundary is needed to be classified into solid/fluid phases, we will classify it into the solid phase.
 template<int dim>
 class ParametricShape {
 public:
     ParametricShape();
     virtual ~ParametricShape() {}
 
-    void Initialize(const std::array<int, dim>& cell_nums, const std::vector<real>& params);
+    virtual void Initialize(const std::array<int, dim>& cell_nums, const std::vector<real>& params);
 
     const int cell_num(const int i) const;
     const int node_num(const int i) const;
@@ -25,8 +26,10 @@ public:
 
     virtual void Backward(const std::vector<real>& dl_dsigned_distances, std::vector<real>& dl_dparams) const;
 
+    virtual const real ComputeSignedDistance(const std::array<real, dim>& point);
+
 protected:
-    virtual void ComputeSignedDistances();
+    void ComputeSignedDistances();
     const int GetIndex(const std::array<int, dim>& node_idx) const;
     const std::array<int, dim> GetIndex(const int node_idx) const;
 

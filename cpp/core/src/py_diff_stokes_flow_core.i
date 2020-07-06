@@ -1,6 +1,7 @@
 %module py_diff_stokes_flow_core
 %{
 #include "../include/shape/parametric_shape.h"
+#include "../include/shape/spline2d.h"
 %}
 
 %exception {
@@ -23,15 +24,14 @@
 %include "../include/shape/parametric_shape.h"
 
 namespace std {
+    %template(StdIntArray2d) array<int, 2>;
+    %template(StdIntArray3d) array<int, 3>;
     %template(StdRealArray2d) array<real, 2>;
     %template(StdRealArray3d) array<real, 3>;
-    %template(StdIntArray4d) array<int, 4>;
-    %template(StdIntArray8d) array<int, 8>;
     %template(StdRealVector) vector<real>;
-    %template(StdIntVector) vector<int>;
-    %template(StdRealMatrix) vector<vector<real>>;
-    %template(StdMap) map<string, real>;
 }
 
 %template(ParametricShape2d) ParametricShape<2>;
 %template(ParametricShape3d) ParametricShape<3>;
+
+%include "../include/shape/spline2d.h"
