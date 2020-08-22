@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-from py_diff_stokes_flow.core.py_diff_stokes_flow_core import Spline2d, StdIntArray2d
+from py_diff_stokes_flow.core.py_diff_stokes_flow_core import Spline2d, StdIntArray2d, StdRealVector
 from py_diff_stokes_flow.common.common import ndarray, create_folder, print_error
 
 def visualize_level_set(ls):
@@ -28,7 +28,7 @@ def test_spline2d(verbose):
     np.random.seed(42)
     folder = Path('spline2d')
 
-    cell_nums = StdIntArray2d((32, 24))
+    cell_nums = (32, 24)
     control_points = ndarray([
         [32, 12],
         [22, 6],
@@ -48,7 +48,22 @@ def test_spline2d(verbose):
     if verbose:
         visualize_level_set(spline)
 
-    return True
+    # Verify the gradients.
+    nx = spline.node_num(0)
+    ny = spline.node_num(1)
+    sdf_weight = np.random.normal(size=(nx, ny))
+    def loss_and_grad(x):
+        spline = Spline2d()
+        spline.Initialize(cell_nums, x.ravel())
+        sdf = ndarray(spline.signed_distances())
+        loss = sdf_weight.ravel().dot(sdf)
+        grad = 0
+        for i in range(nx):
+            for j in range(ny):
+                grad += sdf_weight[i, j] * ndarray(spline.signed_distance_gradient((i, j)))
+        return loss, grad
+    from py_diff_stokes_flow.common.grad_check import check_gradients
+    return check_gradients(loss_and_grad, control_points.ravel())
 
 if __name__ == '__main__':
     verbose = True

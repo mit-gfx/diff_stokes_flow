@@ -8,11 +8,11 @@
 // We assume that t from 0 to 1 equals looping over the solid (positive) region in the counter-clockwise order.
 class Spline2d : public ParametricShape<2> {
 public:
-    void Initialize(const std::array<int, 2>& cell_nums, const std::vector<real>& params);
-    void Backward(const std::vector<real>& dl_dsigned_distances, std::vector<real>& dl_dparams) const;
-    const real ComputeSignedDistance(const std::array<real, 2>& point);
+    const real ComputeSignedDistanceAndGradients(const std::array<real, 2>& point,
+        std::vector<real>& grad) const override;
 
 private:
+    void InitializeCustomizedData() override;
     const Vector2r GetSplinePoint(const real t) const;
     const Vector2r GetSplineDerivative(const real t) const;
 
@@ -21,6 +21,11 @@ private:
     Eigen::Matrix<real, 2, 4> cA_;
     Eigen::Matrix<real, 2, 3> cAB_;
     Vector6r c_;
+
+    // Gradients.
+    std::array<Eigen::Matrix<real, 2, 4>, 8> cA_gradients_;
+    std::array<Eigen::Matrix<real, 2, 3>, 8> cAB_gradients_;
+    Eigen::Matrix<real, 6, 8> c_gradients_;
 };
 
 #endif

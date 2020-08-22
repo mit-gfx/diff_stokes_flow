@@ -1,5 +1,6 @@
 #include "common/common.h"
 #include "common/exception_with_call_stack.h"
+#include "common/file_helper.h"
 
 const real ToReal(const double v) {
     return static_cast<real>(v);
@@ -65,22 +66,28 @@ void PrintSuccess(const std::string& message) {
 }
 
 // Timing.
-static struct timeval t_begin, t_end;
+static std::stack<timeval> t_begins;
 
 void Tic() {
+    timeval t_begin;
     gettimeofday(&t_begin, nullptr);
+    t_begins.push(t_begin);
 }
 
 void Toc(const std::string& message) {
+    timeval t_end;
     gettimeofday(&t_end, nullptr);
+    timeval t_begin = t_begins.top();
     const real t_interval = (t_end.tv_sec - t_begin.tv_sec) + (t_end.tv_usec - t_begin.tv_usec) / 1e6;
     std::cout << CyanHead() << "[Timing] " << message << ": " << t_interval << "s"
               << CyanTail() << std::endl;
+    t_begins.pop();
 }
 
 void CheckError(const bool condition, const std::string& error_message) {
 #if PRINT_LEVEL >= PRINT_ERROR
     if (!condition) {
+        std::cerr << RedHead() << error_message << RedTail() << std::endl;
         throw ExceptionWithCallStack((RedHead() + error_message + RedTail()).c_str());
     }
 #endif
@@ -167,4 +174,48 @@ const SparseMatrix ToSparseMatrix(const int row, const int col, const SparseMatr
     SparseMatrix A(row, col);
     A.setFromTriplets(nonzeros.begin(), nonzeros.end());
     return A;
+}
+
+void SaveSparseMatrixToBinaryFile(const SparseMatrix& A, const std::string& file_name) {
+    std::ofstream fout(file_name);
+    const SparseMatrixElements nonzeros = FromSparseMatrix(A);
+    Save<int>(fout, static_cast<int>(A.rows()));
+    Save<int>(fout, static_cast<int>(A.cols()));
+    const int nonzeros_num = static_cast<int>(nonzeros.size());
+    Save<int>(fout, nonzeros_num);
+    for (const auto& triplet : nonzeros) {
+        Save<int>(fout, triplet.row());
+        Save<int>(fout, triplet.col());
+        Save<real>(fout, triplet.value());
+    }
+}
+
+const SparseMatrix LoadSparseMatrixFromBinaryFile(const std::string& file_name) {
+    std::ifstream fin(file_name);
+    const int rows = Load<int>(fin);
+    const int cols = Load<int>(fin);
+    const int nonzeros_num = Load<int>(fin);
+    SparseMatrixElements nonzeros(nonzeros_num);
+    for (int i = 0; i < nonzeros_num; ++i) {
+        const int row = Load<int>(fin);
+        const int col = Load<int>(fin);
+        const real value = Load<real>(fin);
+        nonzeros[i] = Eigen::Triplet<real>(row, col, value);
+    }
+    return ToSparseMatrix(rows, cols, nonzeros);
+}
+
+void SaveEigenVectorToBinaryFile(const VectorXr& v, const std::string& file_name) {
+    std::ofstream fout(file_name);
+    const int n = static_cast<int>(v.size());
+    Save<int>(fout, n);
+    for (int i = 0; i < n; ++i) Save<real>(fout, v(i));
+}
+
+const VectorXr LoadEigenVectorFromBinaryFile(const std::string& file_name) {
+    std::ifstream fin(file_name);
+    const int n = Load<int>(fin);
+    VectorXr v = VectorXr::Zero(n);
+    for (int i = 0; i < n; ++i) v(i) = Load<real>(fin);
+    return v;
 }

@@ -147,7 +147,7 @@ void dSvd(const Matrix2r& F, const Matrix2r& U, const Vector2r& sig, const Matri
                 Sij(i, j) = ToReal(1) / (sig(j) * sig(j) - sig(i) * sig(i));
                 Sij(j, i) = -Sij(i, j);
             } else {
-                PrintWarning("Singular values are too similar. SVD derivatives are undefined.");
+                // PrintWarning("Singular values are too similar. SVD derivatives are undefined.");
             }
         }
     const Matrix2r domega_U = Sij.cwiseProduct(dP * S + S * dPt);
@@ -176,7 +176,7 @@ void dSvd(const Matrix3r& F, const Matrix3r& U, const Vector3r& sig, const Matri
                 Sij(i, j) = ToReal(1) / (sig(j) * sig(j) - sig(i) * sig(i));
                 Sij(j, i) = -Sij(i, j);
             } else {
-                PrintWarning("Singular values are too similar. SVD derivatives are undefined.");
+                // PrintWarning("Singular values are too similar. SVD derivatives are undefined.");
             }
         }
     const Matrix3r domega_U = Sij.cwiseProduct(dP * S + S * dPt);

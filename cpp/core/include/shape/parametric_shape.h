@@ -14,37 +14,40 @@ public:
     ParametricShape();
     virtual ~ParametricShape() {}
 
-    virtual void Initialize(const std::array<int, dim>& cell_nums, const std::vector<real>& params);
+    void Initialize(const std::array<int, dim>& cell_nums, const std::vector<real>& params);
 
     const int cell_num(const int i) const;
     const int node_num(const int i) const;
+    const int node_num_prod() const { return node_num_prod_; }
     const int param_num() const { return param_num_; }
     const std::vector<real>& params() const { return params_; }
 
     const std::vector<real>& signed_distances() const { return signed_distances_; }
     const real signed_distance(const std::array<int, dim>& node_idx) const;
+    const std::vector<real>& signed_distance_gradient(const std::array<int, dim>& node_idx) const;
 
-    virtual void Backward(const std::vector<real>& dl_dsigned_distances, std::vector<real>& dl_dparams) const;
-
-    virtual const real ComputeSignedDistance(const std::array<real, dim>& point);
+    virtual const real ComputeSignedDistanceAndGradients(const std::array<real, dim>& point,
+        std::vector<real>& grad) const = 0;
 
 protected:
-    void ComputeSignedDistances();
+    // Give derived class a chance to initialize customized data.
+    virtual void InitializeCustomizedData() {}
+
     const int GetIndex(const std::array<int, dim>& node_idx) const;
     const std::array<int, dim> GetIndex(const int node_idx) const;
 
-    const Eigen::Matrix<int, dim, 1> ToEigenIndex(const std::array<int, dim>& node_idx) const;
-    const std::array<int, dim> ToStdIndex(const Eigen::Matrix<int, dim, 1>& node_idx) const;
-
 private:
-    int cell_num_prod_;
+    int cell_num_prod_; // = \Pi cell_nums_.
     std::array<int, dim> cell_nums_;
-    int node_num_prod_;
+    int node_num_prod_; // = \Pi numde_nums_.
     std::array<int, dim> node_nums_;
-    int param_num_;
+    int param_num_; // = len(params_).
     std::vector<real> params_;
 
+    // signed_distances_[node_idx].
     std::vector<real> signed_distances_;
+    // signed_distance_gradients_[node_idx][param_idx].
+    std::vector<std::vector<real>> signed_distance_gradients_;
 };
 
 #endif

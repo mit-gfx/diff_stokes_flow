@@ -1,7 +1,8 @@
 import numpy as np
 from py_diff_stokes_flow.common.common import print_error, print_ok
 
-def check_gradients(loss_and_grad, x0, eps=1e-6, atol=1e-4, rtol=1e-2, verbose=True,
+# var_filter
+def check_gradients(loss_and_grad, x0, eps=1e-6, rtol=1e-2, atol=1e-4, verbose=True,
     loss_only=None, grad_only=None, skip_var=None):
     if grad_only is None:
         _, grad_analytic = loss_and_grad(x0)
@@ -23,7 +24,7 @@ def check_gradients(loss_and_grad, x0, eps=1e-6, atol=1e-4, rtol=1e-2, verbose=T
             loss_pos = loss_only(x_pos)
             loss_neg = loss_only(x_neg)
         grad_numeric = (loss_pos - loss_neg) / 2 / eps
-        if not np.isclose(grad_analytic[i], grad_numeric, atol=atol, rtol=rtol):
+        if not np.isclose(grad_analytic[i], grad_numeric, rtol=rtol, atol=atol):
             grads_equal = False
             if verbose:
                 print_error('Variable {}: analytic {}, numeric {}'.format(i, grad_analytic[i], grad_numeric))

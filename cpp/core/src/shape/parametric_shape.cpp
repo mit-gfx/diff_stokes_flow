@@ -12,6 +12,7 @@ ParametricShape<dim>::ParametricShape() : param_num_(0) {
         node_num_prod_ *= node_nums_[i];
     }
     signed_distances_ = std::vector<real>(node_num_prod_, 0);
+    signed_distance_gradients_ = std::vector<std::vector<real>>(node_num_prod_, std::vector<real>(param_num_, 0));
     params_ = std::vector<real>();
 }
 
@@ -27,7 +28,22 @@ void ParametricShape<dim>::Initialize(const std::array<int, dim>& cell_nums, con
     }
     params_ = params;
     param_num_ = static_cast<int>(params.size());
-    signed_distances_ = std::vector<real>(node_num_prod_, 0);
+
+    InitializeCustomizedData();
+
+    // Now compute the gradients.
+    signed_distances_.resize(node_num_prod_);
+    signed_distance_gradients_.resize(node_num_prod_);
+    for (int i = 0; i < node_num_prod_; ++i) signed_distance_gradients_[i].resize(param_num_);
+
+    #pragma omp parallel for
+    for (int i = 0; i < node_num_prod_; ++i) {
+        const auto idx = GetIndex(i);
+        // Cast to real.
+        std::array<real, dim> p;
+        for (int j = 0; j < dim; ++j) p[j] = static_cast<real>(idx[j]);
+        signed_distances_[i] = ComputeSignedDistanceAndGradients(p, signed_distance_gradients_[i]);        
+    }
 }
 
 template<int dim>
@@ -48,25 +64,9 @@ const real ParametricShape<dim>::signed_distance(const std::array<int, dim>& nod
 }
 
 template<int dim>
-void ParametricShape<dim>::Backward(const std::vector<real>& dl_dsigned_distances, std::vector<real>& dl_dparams)
-    const {
-    dl_dparams.resize(param_num_, 0);
-    std::fill(dl_dparams.begin(), dl_dparams.end(), 0);
-}
-
-template<int dim>
-void ParametricShape<dim>::ComputeSignedDistances() {
-    for (int i = 0; i < node_num_prod_; ++i) {
-        const auto idx = GetIndex(i);
-        std::array<real, dim> point;
-        for (int j = 0; j < dim; ++j) point[j] = static_cast<real>(idx[j]);
-        signed_distances_[i] = ComputeSignedDistance(point);
-    }
-}
-
-template<int dim>
-const real ParametricShape<dim>::ComputeSignedDistance(const std::array<real, dim>& point) {
-    return 0;
+const std::vector<real>& ParametricShape<dim>::signed_distance_gradient(
+    const std::array<int, dim>& node_idx) const {
+    return signed_distance_gradients_[GetIndex(node_idx)];
 }
 
 template<int dim>
@@ -92,24 +92,6 @@ const std::array<int, dim> ParametricShape<dim>::GetIndex(const int node_idx) co
         node_idx_copy /= node_nums_[i];
     }
     return node_idx_array;
-}
-
-template<int dim>
-const Eigen::Matrix<int, dim, 1> ParametricShape<dim>::ToEigenIndex(const std::array<int, dim>& node_idx) const {
-    Eigen::Matrix<int, dim, 1> node_idx_eig;
-    for (int i = 0; i < dim; ++i) {
-        node_idx_eig(i) = node_idx[i];
-    }
-    return node_idx_eig;
-}
-
-template<int dim>
-const std::array<int, dim> ParametricShape<dim>::ToStdIndex(const Eigen::Matrix<int, dim, 1>& node_idx) const {
-    std::array<int, dim> node_idx_std;
-    for (int i = 0; i < dim; ++i) {
-        node_idx_std[i] = node_idx(i);
-    }
-    return node_idx_std;
 }
 
 template class ParametricShape<2>;

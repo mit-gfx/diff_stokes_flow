@@ -48,5 +48,9 @@ const bool EndsWith(const std::string& full, const std::string& ending);
 // SparseMatrix.
 const SparseMatrixElements FromSparseMatrix(const SparseMatrix& A);
 const SparseMatrix ToSparseMatrix(const int row, const int col, const SparseMatrixElements& nonzeros);
+void SaveSparseMatrixToBinaryFile(const SparseMatrix& A, const std::string& file_name);
+const SparseMatrix LoadSparseMatrixFromBinaryFile(const std::string& file_name);
+void SaveEigenVectorToBinaryFile(const VectorXr& v, const std::string& file_name);
+const VectorXr LoadEigenVectorFromBinaryFile(const std::string& file_name);
 
 #endif
