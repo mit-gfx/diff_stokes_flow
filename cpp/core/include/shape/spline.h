@@ -1,5 +1,5 @@
-#ifndef SHAPE_SPLINE2D_H
-#define SHAPE_SPLINE2D_H
+#ifndef SHAPE_SPLINE_H
+#define SHAPE_SPLINE_H
 
 #include "shape/parametric_shape.h"
 

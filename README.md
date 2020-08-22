@@ -1,5 +1,5 @@
 # diff_stokes_flow
-Code for the Siggraph Asia 2020 submission
+Code for the Siggraph Asia 2020 paper **Functional Optimization of Fluidic Devices with Differentiable Stokes Flow**.
 
 ## Recommended Systems
 - Ubuntu 18.04
@@ -15,6 +15,3 @@ conda activate diff_stokes_flow
 ```
 
 ## Examples
-
-### Parametric shapes
-- `spline2d` shows the signed distance function of the 2D parametric spline.

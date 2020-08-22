@@ -1,4 +1,4 @@
-#include "shape/spline2d.h"
+#include "shape/spline.h"
 #include "common/common.h"
 #include "unsupported/Eigen/Polynomials"
 
@@ -100,6 +100,7 @@ const real Spline2d::ComputeSignedDistanceAndGradients(const std::array<real, 2>
 
     // Compute the gradient.
     // control_point -> coeff -> min_t -> min_proj -> min_dist.
+    // According to the envelope theorem, we can safely assume min_t does not change during the gradient computation.
     // min_proj = GetSplinePoint(t) = cA_ * ts.
     const real min_t2 = min_t * min_t;
     const real min_t3 = min_t * min_t2;
@@ -113,6 +114,7 @@ const real Spline2d::ComputeSignedDistanceAndGradients(const std::array<real, 2>
     Vector2r q_unit = Vector2r::Zero();
     if (min_dist > eps) q_unit = q / min_dist;
     const Vector8r grad_vec(q_unit.transpose() * min_proj_gradients);
+    grad.resize(8);
     for (int i = 0; i < 8; ++i) grad[i] = sign * grad_vec(i);
     return sign * min_dist;
 }

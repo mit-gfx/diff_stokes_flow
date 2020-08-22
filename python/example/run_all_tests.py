@@ -8,7 +8,8 @@ if __name__ == '__main__':
     # If you want to add a new test, simply add its name here --- you can find their names from README.md.
     tests = [
         # Parametric shapes.
-        'spline2d',
+        'spline_2d',
+        'shape_composition_2d'
     ]
 
     failure_cnt = 0

@@ -24,9 +24,9 @@ def visualize_level_set(ls):
     plt.show()
     plt.close()
 
-def test_spline2d(verbose):
+def test_spline_2d(verbose):
     np.random.seed(42)
-    folder = Path('spline2d')
+    folder = Path('spline_2d')
 
     cell_nums = (32, 24)
     control_points = ndarray([
@@ -63,8 +63,8 @@ def test_spline2d(verbose):
                 grad += sdf_weight[i, j] * ndarray(spline.signed_distance_gradient((i, j)))
         return loss, grad
     from py_diff_stokes_flow.common.grad_check import check_gradients
-    return check_gradients(loss_and_grad, control_points.ravel())
+    return check_gradients(loss_and_grad, control_points.ravel(), verbose=verbose)
 
 if __name__ == '__main__':
     verbose = True
-    test_spline2d(verbose)
+    test_spline_2d(verbose)

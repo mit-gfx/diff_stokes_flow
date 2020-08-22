@@ -1,7 +1,8 @@
 %module py_diff_stokes_flow_core
 %{
 #include "../include/shape/parametric_shape.h"
-#include "../include/shape/spline2d.h"
+#include "../include/shape/spline.h"
+#include "../include/shape/shape_composition.h"
 %}
 
 %exception {
@@ -22,6 +23,7 @@
 %include <std_map.i>
 %include "../include/common/config.h"
 %include "../include/shape/parametric_shape.h"
+%include "../include/shape/shape_composition.h"
 
 namespace std {
     %template(StdIntArray2d) array<int, 2>;
@@ -33,5 +35,7 @@ namespace std {
 
 %template(ParametricShape2d) ParametricShape<2>;
 %template(ParametricShape3d) ParametricShape<3>;
+%template(ShapeComposition2d) ShapeComposition<2>;
+%template(ShapeComposition3d) ShapeComposition<3>;
 
-%include "../include/shape/spline2d.h"
+%include "../include/shape/spline.h"

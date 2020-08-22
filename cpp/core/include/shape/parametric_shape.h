@@ -17,6 +17,7 @@ public:
     void Initialize(const std::array<int, dim>& cell_nums, const std::vector<real>& params);
 
     const int cell_num(const int i) const;
+    const std::array<int, dim>& cell_nums() const { return cell_nums_; }
     const int node_num(const int i) const;
     const int node_num_prod() const { return node_num_prod_; }
     const int param_num() const { return param_num_; }
