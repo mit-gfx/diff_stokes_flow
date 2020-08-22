@@ -7,7 +7,7 @@ Code for the Siggraph Asia 2020 submission
 
 ## Installation
 ```
-git clone git@github.com:mit-gfx/diff_stokes_flow.git
+git clone --recursive https://github.com/mit-gfx/diff_stokes_flow.git
 cd diff_stokes_flow
 conda env create -f environment.yml
 conda activate diff_stokes_flow
