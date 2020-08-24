@@ -26,16 +26,38 @@ public:
     const MatrixXr& energy_matrix() const { return energy_matrix_; }
     const VectorXr& dirichlet_vector() const { return dirichlet_vector_; }
 
+    const Eigen::Matrix<real, dim, -1>& normal_gradients() const { return normal_gradients_; }
+    const VectorXr& offset_gradients() const { return offset_gradients_; }
+    const MatrixXr& sample_areas_gradients() const { return sample_areas_gradients_; }
+    const MatrixXr& sample_boundary_areas_gradients() const { return sample_boundary_areas_gradients_; }
+    const VectorXr& area_gradients() const { return area_gradients_; }
+    const std::vector<MatrixXr>& energy_matrix_gradients() const { return energy_matrix_gradients_; }
+    const MatrixXr& dirichlet_vector_gradients() const { return dirichlet_vector_gradients_; }
+
     const bool IsSolidCell() const { return area_ <= threshold_; }
     const bool IsFluidCell() const { return area_ >= 1 - threshold_; }
     const bool IsMixedCell() const { return !IsSolidCell() && !IsFluidCell(); }
 
+    // Python wrapper.
+    const std::array<real, dim> py_normal() const;
+    const std::vector<std::vector<real>> py_energy_matrix() const;
+    const std::vector<real> py_dirichlet_vector() const;
+    const std::array<real, dim> py_normal_gradient(const int corner_idx) const;
+    const real py_offset_gradient(const int corner_idx) const;
+    const std::vector<real> py_sample_areas_gradient(const int corner_idx) const;
+    const std::vector<real> py_sample_boundary_areas_gradient(const int corner_idx) const;
+    const real py_area_gradient(const int corner_idx) const;
+    const std::vector<std::vector<real>> py_energy_matrix_gradient(const int corner_idx) const;
+    const std::vector<real> py_dirichlet_vector_gradient(const int corner_idx) const;
+
 private:
-    const Eigen::Matrix<real, dim + 1, 1> FitBoundary(const std::vector<real>& sdf_at_corners) const;
-    void ComputeSampleAreaAndBoundaryArea(const int sample_idx, real& area, real& boundary_area) const;
-    const MatrixXr ComputeEnergyMatrix() const;
+    void FitBoundary(const std::vector<real>& sdf_at_corners, Eigen::Matrix<real, dim, 1>& normal, real& offset,
+        Eigen::Matrix<real, dim, -1>& normal_gradients, VectorXr& offset_gradients) const;
+    void ComputeSampleAreaAndBoundaryArea(const int sample_idx, real& area, real& boundary_area,
+        VectorXr& area_gradients, VectorXr& boundary_area_gradients) const;
+    void ComputeEnergyMatrix(MatrixXr& energy_matrix, std::vector<MatrixXr>& energy_matrix_gradients) const;
     const MatrixXr VelocityToDeformationGradient(const Eigen::Matrix<real, dim, 1>& material_coordinates) const;
-    const VectorXr ComputeDirichletVector() const;
+    void ComputeDirichletVector(VectorXr& dirichlet_vector, MatrixXr& dirichlet_vector_gradients) const;
 
     int corner_num_prod_;   // 4 in 2D and 8 in 3D.
     std::array<int, dim> corner_nums_;   // (2, 2) in 2D and (2, 2, 2) in 3D.
@@ -77,6 +99,23 @@ private:
     //      u[i].dot(dirichlet_vector_)
     // to represent the integral of u[i] over the boundary region.
     VectorXr dirichlet_vector_;
+
+    // Corresponding gradient information.
+    // We assume the sdf_at_corners_idx is the last dimension.
+    // normal_gradients_(, sdf_at_corners_idx).
+    Eigen::Matrix<real, dim, -1> normal_gradients_;
+    // offset_gradients_(sdf_at_corners_idx)
+    VectorXr offset_gradients_;
+
+    // sample_areas_gradients_(:, sdf_at_corners_idx).
+    MatrixXr sample_areas_gradients_;
+    MatrixXr sample_boundary_areas_gradients_;
+    VectorXr area_gradients_;
+
+    // energy_matrix_gradients_[sdf_at_corners_idx].
+    std::vector<MatrixXr> energy_matrix_gradients_;
+    // dirichlet_vector_gradients(:, sdf_at_corners_idx).
+    MatrixXr dirichlet_vector_gradients_;
 };
 
 #endif

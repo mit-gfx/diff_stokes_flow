@@ -20,9 +20,7 @@ void Cell<dim>::Initialize(const real E, const real nu, const real threshold, co
     threshold_ = threshold;
 
     // Compute normal_ and offset_.
-    const Eigen::Matrix<real, dim + 1, 1> plane_eq = FitBoundary(sdf_at_corners);
-    normal_ = plane_eq.head(dim);
-    offset_ = plane_eq(dim);
+    FitBoundary(sdf_at_corners, normal_, offset_, normal_gradients_, offset_gradients_);
 
     // Compute areas.
     edge_sample_num_ = edge_sample_num;
@@ -35,15 +33,104 @@ void Cell<dim>::Initialize(const real E, const real nu, const real threshold, co
     sample_areas_.resize(sample_num_prod_, 0);
     sample_boundary_areas_.clear();
     sample_boundary_areas_.resize(sample_num_prod_, 0);
-    for (int i = 0; i < sample_num_prod_; ++i)
-        ComputeSampleAreaAndBoundaryArea(i, sample_areas_[i], sample_boundary_areas_[i]);
+    sample_areas_gradients_ = MatrixXr::Zero(sample_num_prod_, corner_num_prod_);
+    sample_boundary_areas_gradients_ = MatrixXr::Zero(sample_num_prod_, corner_num_prod_);
+    for (int i = 0; i < sample_num_prod_; ++i) {
+        VectorXr sample_area_gradients, sample_boundary_area_gradients;
+        ComputeSampleAreaAndBoundaryArea(i, sample_areas_[i], sample_boundary_areas_[i], sample_area_gradients,
+            sample_boundary_area_gradients);
+        sample_areas_gradients_.row(i) = sample_area_gradients;
+        sample_boundary_areas_gradients_.row(i) = sample_boundary_area_gradients;
+    }
 
     area_ = 0;
     for (const real a : sample_areas_) area_ += a;
+    area_gradients_ = VectorXr(sample_areas_gradients_.colwise().sum());
 
     // Compute energy_matrix_ and dirichlet_matrix_.
-    energy_matrix_ = ComputeEnergyMatrix();
-    dirichlet_vector_ = ComputeDirichletVector();
+    ComputeEnergyMatrix(energy_matrix_, energy_matrix_gradients_);
+    ComputeDirichletVector(dirichlet_vector_, dirichlet_vector_gradients_);
+}
+
+template<int dim>
+const std::array<real, dim> Cell<dim>::py_normal() const {
+    std::array<real, dim> normal;
+    for (int i = 0; i < dim; ++i) normal[i] = normal_(i);
+    return normal;
+}
+
+template<int dim>
+const std::vector<std::vector<real>> Cell<dim>::py_energy_matrix() const {
+    const int rows = static_cast<int>(energy_matrix_.rows());
+    const int cols = static_cast<int>(energy_matrix_.cols());
+    std::vector<std::vector<real>> K(rows, std::vector<real>(cols, 0));
+    for (int i = 0; i < rows; ++i)
+        for (int j = 0; j < cols; ++j)
+            K[i][j] = energy_matrix_(i, j);
+    return K;
+}
+
+template<int dim>
+const std::vector<real> Cell<dim>::py_dirichlet_vector() const {
+    std::vector<real> b(corner_num_prod_, 0);
+    for (int i = 0; i < corner_num_prod_; ++i) b[i] = dirichlet_vector_(i);
+    return b;
+}
+
+template<int dim>
+const std::array<real, dim> Cell<dim>::py_normal_gradient(const int corner_idx) const {
+    CheckError(0 <= corner_idx && corner_idx < corner_num_prod_, "corner_idx out of bound.");
+    std::array<real, dim> n;
+    for (int i = 0; i < dim; ++i) n[i] = normal_gradients_(i, corner_idx);
+    return n;
+}
+
+template<int dim>
+const real Cell<dim>::py_offset_gradient(const int corner_idx) const {
+    CheckError(0 <= corner_idx && corner_idx < corner_num_prod_, "corner_idx out of bound.");
+    return offset_gradients_(corner_idx);
+}
+
+template<int dim>
+const std::vector<real> Cell<dim>::py_sample_areas_gradient(const int corner_idx) const {
+    CheckError(0 <= corner_idx && corner_idx < corner_num_prod_, "corner_idx out of bound.");
+    std::vector<real> v(sample_num_prod_);
+    for (int i = 0; i < sample_num_prod_; ++i) v[i] = sample_areas_gradients_(i, corner_idx);
+    return v;
+}
+
+template<int dim>
+const std::vector<real> Cell<dim>::py_sample_boundary_areas_gradient(const int corner_idx) const {
+    CheckError(0 <= corner_idx && corner_idx < corner_num_prod_, "corner_idx out of bound.");
+    std::vector<real> v(sample_num_prod_);
+    for (int i = 0; i < sample_num_prod_; ++i) v[i] = sample_boundary_areas_gradients_(i, corner_idx);
+    return v;
+}
+
+template<int dim>
+const real Cell<dim>::py_area_gradient(const int corner_idx) const {
+    CheckError(0 <= corner_idx && corner_idx < corner_num_prod_, "corner_idx out of bound.");
+    return area_gradients_(corner_idx);
+}
+
+template<int dim>
+const std::vector<std::vector<real>> Cell<dim>::py_energy_matrix_gradient(const int corner_idx) const {
+    CheckError(0 <= corner_idx && corner_idx < corner_num_prod_, "corner_idx out of bound.");
+    const int rows = static_cast<int>(energy_matrix_.rows());
+    const int cols = static_cast<int>(energy_matrix_.cols());
+    std::vector<std::vector<real>> K(rows, std::vector<real>(cols, 0));
+    for (int i = 0; i < rows; ++i)
+        for (int j = 0; j < cols; ++j)
+            K[i][j] = energy_matrix_gradients_[corner_idx](i, j);
+    return K;
+}
+
+template<int dim>
+const std::vector<real> Cell<dim>::py_dirichlet_vector_gradient(const int corner_idx) const {
+    CheckError(0 <= corner_idx && corner_idx < corner_num_prod_, "corner_idx out of bound.");
+    std::vector<real> v(corner_num_prod_);
+    for (int i = 0; i < corner_num_prod_; ++i) v[i] = dirichlet_vector_gradients_(i, corner_idx);
+    return v;
 }
 
 template<int dim>
@@ -70,7 +157,8 @@ const real Cell<dim>::sample_boundary_area(const std::array<int, dim>& sample_id
 }
 
 template<int dim>
-const Eigen::Matrix<real, dim + 1, 1> Cell<dim>::FitBoundary(const std::vector<real>& sdf_at_corners) const {
+void Cell<dim>::FitBoundary(const std::vector<real>& sdf_at_corners, Eigen::Matrix<real, dim, 1>& normal, real& offset,
+    Eigen::Matrix<real, dim, -1>& normal_gradients, VectorXr& offset_gradients) const {
     MatrixXr corners(corner_num_prod_, dim + 1);
     for (int i = 0; i < corner_num_prod_; ++i) {
         const auto idx = GetIndex(i, corner_nums_);
@@ -81,18 +169,28 @@ const Eigen::Matrix<real, dim + 1, 1> Cell<dim>::FitBoundary(const std::vector<r
     const VectorXr sdf = Eigen::Map<const VectorXr>(sdf_at_corners.data(), corner_num_prod_);
     // min \|corners * x - sdf\|.
     // x = (corners.T * corners)^(-1) * (corners.T * sdf).
-    const Eigen::Matrix<real, dim + 1, dim + 1> CtC = corners.transpose() * corners;
-    const Eigen::Matrix<real, dim + 1, 1> plane_eq = CtC.ldlt().solve(corners.transpose() * sdf);
-    return plane_eq;
+    const Eigen::Matrix<real, dim + 1, -1> Ct = corners.transpose();
+    const Eigen::Matrix<real, dim + 1, dim + 1> CtC = Ct * corners;
+    const Eigen::Matrix<real, dim + 1, 1> plane_eq = CtC.ldlt().solve(Ct * sdf);
+    normal = plane_eq.head(dim);
+    offset = plane_eq(dim);
+
+    // Compute gradients.
+    const Eigen::Matrix<real, dim + 1, -1> jac = CtC.ldlt().solve(Ct);
+    normal_gradients = jac.topRows(dim);
+    offset_gradients = VectorXr(jac.row(dim));
 }
 
 template<int dim>
-void Cell<dim>::ComputeSampleAreaAndBoundaryArea(const int sample_idx, real& area, real& boundary_area) const {
+void Cell<dim>::ComputeSampleAreaAndBoundaryArea(const int sample_idx, real& area, real& boundary_area,
+    VectorXr& area_gradients, VectorXr& boundary_area_gradients) const {
     // Input: normal_ and offset_: the plane equation in the cell coordinates ([0, 1]^dim).
     // Output: area: the area of the intersection between the subcell sample_idx and normal_.dot(x) + offset_ < 0.
     // normal_.dot(dx) + doffset = 0.
     // -doffset / |normal_| * boundary_area = darea.
     // boundary_area = -\partial area / \partial offset * |normal_|
+    area_gradients = VectorXr::Zero(corner_num_prod_);
+    boundary_area_gradients = VectorXr::Zero(corner_num_prod_);
 
     const auto idx = GetIndex(sample_idx, sample_nums_);
     const real dx = 1 / ToReal(edge_sample_num_);
@@ -104,27 +202,47 @@ void Cell<dim>::ComputeSampleAreaAndBoundaryArea(const int sample_idx, real& are
     // p * dot(dx * normal_) + origin.dot(normal_) + offset_ >= 0.
     // Since we care about the fluid area, we flip the sign.
     const Eigen::Matrix<real, dim, 1> scaled_normal = -dx * normal_;
+    const Eigen::Matrix<real, dim, -1> scaled_normal_gradients = -dx * normal_gradients_;
     const real scaled_offset = -(origin.dot(normal_) + offset_);
+    const VectorXr scaled_offset_gradients = -VectorXr(origin.transpose() * normal_gradients_) - offset_gradients_;
     const real scaled_offset_derivative = -1;
 
     // Now compute the intersected area between a unit cube and p * scaled_normal + scaled_offset >= 0.
     const real a = scaled_normal.prod();
+    VectorXr a_gradients = VectorXr::Zero(corner_num_prod_);
+    for (int i = 0; i < dim; ++i) {
+        // a = \Pi scaled_normal(i)
+        // a' = \Sum scaled_normal_gradient(i) * scaled_normal(j)
+        VectorXr ai_gradients = VectorXr::Ones(corner_num_prod_);
+        for (int j = 0; j < dim; ++j) {
+            if (i == j) {
+                ai_gradients = VectorXr(ai_gradients.array() * VectorXr(scaled_normal_gradients.row(i)).array());
+            } else {
+                ai_gradients *= scaled_normal(j);
+            }
+        }
+        a_gradients += ai_gradients;
+    }
     const real eps = std::numeric_limits<real>::epsilon();
     CheckError(a > eps || a < -eps, "Singular case: boundaries are axis-aligned.");
     const real inv_a = 1 / a;
+    const VectorXr inv_a_gradients = -a_gradients * inv_a * inv_a;
     real d_factorial = 1;
     for (int i = 0; i < dim; ++i) d_factorial *= (i + 1);
     const real inv_d_factorial = 1 / d_factorial;
 
     area = 0;
     real area_derivative = 0;
+    VectorXr area_derivative_gradients = VectorXr::Zero(corner_num_prod_);
     for (int i = 0; i < corner_num_prod_; ++i) {
         const auto corner_idx = GetIndex(i, corner_nums_);
         // Check if corner_idx is inside the halfspace.
         real dist = scaled_offset;
+        VectorXr dist_gradients = scaled_offset_gradients;
         real dist_derivative = scaled_offset_derivative;
         for (int j = 0; j < dim; ++j) {
             dist += corner_idx[j] * scaled_normal(j);
+            dist_gradients += VectorXr(corner_idx[j] * scaled_normal_gradients.row(j));
         }
         if (dist < 0) continue;
 
@@ -133,21 +251,34 @@ void Cell<dim>::ComputeSampleAreaAndBoundaryArea(const int sample_idx, real& are
         for (int j = 0; j < dim; ++j)
             if (corner_idx[j] == 0) ++zero_num;
         const real sign = zero_num % 2 ? -1 : 1;
-        area += sign * inv_a * inv_d_factorial * std::pow(dist, dim);
-        area_derivative += sign * inv_a * inv_d_factorial * dim * std::pow(dist, dim - 1) * dist_derivative;
+        const real dist_dim_power = std::pow(dist, dim);
+        const real dist_dim_minus_one_power = std::pow(dist, dim - 1);
+        area += sign * inv_a * inv_d_factorial * dist_dim_power;
+        area_gradients += sign * inv_d_factorial * (inv_a * dim * dist_dim_minus_one_power * dist_gradients
+            + inv_a_gradients * dist_dim_power);
+        area_derivative += sign * inv_a * inv_d_factorial * dim * dist_dim_minus_one_power * dist_derivative;
+        area_derivative_gradients += sign * inv_d_factorial * dim * dist_derivative * (
+            inv_a_gradients * dist_dim_minus_one_power + inv_a * (dim - 1) * std::pow(dist, dim - 2) * dist_gradients);
     }
 
     // Scale it back to the original coordinate.
     const real factor = std::pow(dx, dim);
     area *= factor;
+    area_gradients *= factor;
     area_derivative *= factor;
-    boundary_area = -area_derivative * normal_.norm();
+    area_derivative_gradients *= factor;
+    const real normal_len = normal_.norm();
+    CheckError(normal_len > eps, "Singular normal.");
+    const VectorXr normal_len_gradients = VectorXr(normal_.transpose() * normal_gradients_) / normal_len;
+    boundary_area = -area_derivative * normal_len;
+    boundary_area_gradients = -(area_derivative_gradients * normal_len + area_derivative * normal_len_gradients);
 }
 
 template<int dim>
-const MatrixXr Cell<dim>::ComputeEnergyMatrix() const {
-    MatrixXr energy_matrix(dim * corner_num_prod_, dim * corner_num_prod_);
-    energy_matrix.setZero();
+void Cell<dim>::ComputeEnergyMatrix(MatrixXr& energy_matrix, std::vector<MatrixXr>& energy_matrix_gradients) const {
+    energy_matrix = MatrixXr::Zero(dim * corner_num_prod_, dim * corner_num_prod_);
+    energy_matrix_gradients.clear();
+    energy_matrix_gradients.resize(corner_num_prod_, MatrixXr::Zero(dim * corner_num_prod_, dim * corner_num_prod_));
     const real dx = ToReal(1) / edge_sample_num_;
     for (int i = 0; i < sample_num_prod_; ++i) {
         const auto sample_idx = GetIndex(i, sample_nums_);
@@ -177,13 +308,18 @@ const MatrixXr Cell<dim>::ComputeEnergyMatrix() const {
             trace += u_to_eps.row(ii * dim + ii);
         energy_matrix_sample += la_ * trace.transpose() * trace;
         energy_matrix += energy_matrix_sample * sample_areas_[i];
+
+        // Compute energy_matrix_gradients_.
+        for (int j = 0; j < corner_num_prod_; ++j) {
+            energy_matrix_gradients[j] += energy_matrix_sample * sample_areas_gradients_(i, j);
+        }
     }
-    return energy_matrix;
 }
 
 template<int dim>
-const VectorXr Cell<dim>::ComputeDirichletVector() const {
-    VectorXr dirichlet_vector = VectorXr::Zero(corner_num_prod_);
+void Cell<dim>::ComputeDirichletVector(VectorXr& dirichlet_vector, MatrixXr& dirichlet_vector_gradients) const {
+    dirichlet_vector = VectorXr::Zero(corner_num_prod_);
+    dirichlet_vector_gradients = MatrixXr::Zero(corner_num_prod_, corner_num_prod_);
     const real dx = ToReal(1) / edge_sample_num_;
     const real eps = std::numeric_limits<real>::epsilon();
     for (int i = 0; i < sample_num_prod_; ++i) {
@@ -194,20 +330,37 @@ const VectorXr Cell<dim>::ComputeDirichletVector() const {
         // (sample + normal * t).dot(normal) + offset = 0.
         // normal.dot(normal) * t + sample.dot(normal) + offset = 0.
         const real a = sample.dot(normal_) + offset_;
+        const VectorXr a_gradients = VectorXr(sample.transpose() * normal_gradients_) + offset_gradients_;
         const real b = normal_.dot(normal_);
+        const VectorXr b_gradients = 2 * VectorXr(normal_.transpose() * normal_gradients_);
         CheckError(b > eps, "Singular boundary.");
         const real t = -a / b;
+        const VectorXr t_gradients = (a * b_gradients - a_gradients * b) / (b * b);
         const auto projected = sample + normal_ * t;
+        const MatrixXr projected_gradients = normal_gradients_ * t + normal_ * t_gradients.transpose();
 
         // Compute the contribution of this sample.
         for (int j = 0; j < corner_num_prod_; ++j) {
             const auto corner_idx = GetIndex(j, corner_nums_);
             real contrib = 1;
-            for (int k = 0; k < dim; ++k) contrib *= corner_idx[k] ? projected(k) : (1 - projected(k));
+            VectorXr contrib_gradients = VectorXr::Zero(corner_num_prod_);
+            for (int k = 0; k < dim; ++k) {
+                // contrib = contrib * projected(k) or contrib * (1 - projected(k)).
+                if (corner_idx[k]) {
+                    contrib_gradients = VectorXr(contrib * projected_gradients.row(k))
+                        + contrib_gradients * projected(k);
+                    contrib *= projected(k);
+                } else {
+                    contrib_gradients = VectorXr(contrib * -projected_gradients.row(k))
+                        + contrib_gradients * (1 - projected(k));
+                    contrib *= 1 - projected(k);
+                }
+            }
             dirichlet_vector(j) += contrib * sample_boundary_areas_[i];
+            dirichlet_vector_gradients.row(j) += VectorXr(contrib * sample_boundary_areas_gradients_.row(i))
+                + contrib_gradients * sample_boundary_areas_[i];
         }
     }
-    return dirichlet_vector;
 }
 
 template<>
