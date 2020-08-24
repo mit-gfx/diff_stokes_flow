@@ -69,7 +69,7 @@ def test_shape_composition_2d(verbose):
         grad = 0
         for i in range(nx):
             for j in range(ny):
-                grad += sdf_weight[i, j] * ndarray(shape.signed_distance_gradient((i, j)))
+                grad += sdf_weight[i, j] * ndarray(shape.signed_distance_gradients((i, j)))
         return loss, grad
     from py_diff_stokes_flow.common.grad_check import check_gradients
     return check_gradients(loss_and_grad, control_points.ravel(), verbose=verbose)

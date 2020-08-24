@@ -4,7 +4,7 @@ sys.path.append('../')
 import numpy as np
 from pathlib import Path
 
-from py_diff_stokes_flow.core.py_diff_stokes_flow_core import Scene2d
+from py_diff_stokes_flow.core.py_diff_stokes_flow_core import Scene2d, StdRealVector
 from py_diff_stokes_flow.common.common import ndarray, print_error
 
 np.random.seed(42)
@@ -54,8 +54,11 @@ def solve_forward_amplifier_2d(scale):
     scene.InitializeBoundaryType('no_separation')
 
     # Solve for the velocity.
-    u = ndarray(scene.Solve('eigen'))
-    u = u.reshape((scaled_cell_nums[0] + 1, scaled_cell_nums[1] + 1, 2)) / scale
+    u = StdRealVector(0)
+    dl_du = np.zeros((scaled_cell_nums[0] + 1) * (scaled_cell_nums[1] + 1) * 2)
+    dl_dparam = StdRealVector(0)
+    scene.Solve('eigen', dl_du, u, dl_dparam)
+    u = ndarray(u).reshape((scaled_cell_nums[0] + 1, scaled_cell_nums[1] + 1, 2)) / scale
 
     # Zero out velocities in the solid phase.
     for i in range(scaled_cell_nums[0] + 1):

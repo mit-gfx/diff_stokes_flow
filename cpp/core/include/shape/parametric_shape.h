@@ -27,7 +27,7 @@ public:
 
     const std::vector<real>& signed_distances() const { return signed_distances_; }
     const real signed_distance(const std::array<int, dim>& node_idx) const;
-    const std::vector<real>& signed_distance_gradient(const std::array<int, dim>& node_idx) const;
+    const std::vector<real>& signed_distance_gradients(const std::array<int, dim>& node_idx) const;
 
     virtual const real ComputeSignedDistanceAndGradients(const std::array<real, dim>& point,
         std::vector<real>& grad) const = 0;

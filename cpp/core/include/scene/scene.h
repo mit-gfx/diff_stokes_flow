@@ -15,10 +15,12 @@ public:
     void InitializeCell(const real E, const real nu, const real threshold, const int edge_sample_num);
     void InitializeDirichletBoundaryCondition(const std::vector<int>& dofs, const std::vector<real>& values);
     void InitializeBoundaryType(const std::string& boundary_type);
-    const std::vector<real> Solve(const std::string& qp_solver_name) const;
+    void Solve(const std::string& qp_solver_name, const std::vector<real>& partial_loss_partial_solution_field,
+        std::vector<real>& solution_field, std::vector<real>& d_loss_d_params) const;
 
     const int GetNodeDof(const std::array<int, dim>& node_idx, const int node_dim) const;
     const real GetSignedDistance(const std::array<int, dim>& node_idx) const;
+    const std::vector<real> GetSignedDistanceGradients(const std::array<int, dim>& node_idx) const;
 
 private:
     // Geometry information.

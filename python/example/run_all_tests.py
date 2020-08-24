@@ -10,7 +10,8 @@ if __name__ == '__main__':
         # Parametric shapes.
         'spline_2d',
         'shape_composition_2d',
-        'cell_2d'
+        'cell_2d',
+        'scene_2d'
     ]
 
     failure_cnt = 0

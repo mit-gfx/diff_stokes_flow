@@ -64,7 +64,7 @@ const real ParametricShape<dim>::signed_distance(const std::array<int, dim>& nod
 }
 
 template<int dim>
-const std::vector<real>& ParametricShape<dim>::signed_distance_gradient(
+const std::vector<real>& ParametricShape<dim>::signed_distance_gradients(
     const std::array<int, dim>& node_idx) const {
     return signed_distance_gradients_[GetIndex(node_idx, node_nums_)];
 }
