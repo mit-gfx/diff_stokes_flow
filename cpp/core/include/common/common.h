@@ -53,4 +53,10 @@ const SparseMatrix LoadSparseMatrixFromBinaryFile(const std::string& file_name);
 void SaveEigenVectorToBinaryFile(const VectorXr& v, const std::string& file_name);
 const VectorXr LoadEigenVectorFromBinaryFile(const std::string& file_name);
 
+// Indices.
+const int GetIndex(const std::array<int, 2>& idx, const std::array<int, 2>& dim);
+const int GetIndex(const std::array<int, 3>& idx, const std::array<int, 3>& dim);
+const std::array<int, 2> GetIndex(const int idx, const std::array<int, 2>& dim);
+const std::array<int, 3> GetIndex(const int idx, const std::array<int, 3>& dim);
+
 #endif

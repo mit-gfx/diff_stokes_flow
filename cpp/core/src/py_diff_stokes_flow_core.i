@@ -3,6 +3,7 @@
 #include "../include/shape/parametric_shape.h"
 #include "../include/shape/spline.h"
 #include "../include/shape/shape_composition.h"
+#include "../include/cell/cell.h"
 %}
 
 %exception {
@@ -24,6 +25,7 @@
 %include "../include/common/config.h"
 %include "../include/shape/parametric_shape.h"
 %include "../include/shape/shape_composition.h"
+%include "../include/cell/cell.h"
 
 namespace std {
     %template(StdIntArray2d) array<int, 2>;
@@ -37,5 +39,7 @@ namespace std {
 %template(ParametricShape3d) ParametricShape<3>;
 %template(ShapeComposition2d) ShapeComposition<2>;
 %template(ShapeComposition3d) ShapeComposition<3>;
+%template(Cell2d) Cell<2>;
+%template(Cell3d) Cell<3>;
 
 %include "../include/shape/spline.h"

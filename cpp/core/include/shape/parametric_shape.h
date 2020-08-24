@@ -34,9 +34,6 @@ protected:
     // Give derived class a chance to initialize customized data.
     virtual void InitializeCustomizedData() {}
 
-    const int GetIndex(const std::array<int, dim>& node_idx) const;
-    const std::array<int, dim> GetIndex(const int node_idx) const;
-
 private:
     int cell_num_prod_; // = \Pi cell_nums_.
     std::array<int, dim> cell_nums_;

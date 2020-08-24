@@ -219,3 +219,24 @@ const VectorXr LoadEigenVectorFromBinaryFile(const std::string& file_name) {
     for (int i = 0; i < n; ++i) v(i) = Load<real>(fin);
     return v;
 }
+
+const int GetIndex(const std::array<int, 2>& idx, const std::array<int, 2>& dim) {
+    CheckError(0 <= idx[0] && idx[0] < dim[0] && 0 <= idx[1] && idx[1] < dim[1], "Index out of range.");
+    return idx[0] * dim[1] + idx[1];
+}
+
+const int GetIndex(const std::array<int, 3>& idx, const std::array<int, 3>& dim) {
+    CheckError(0 <= idx[0] && idx[0] < dim[0] && 0 <= idx[1] && idx[1] < dim[1] && 0 <= idx[2] && idx[2] < dim[2],
+        "Index out of range.");
+    return idx[0] * dim[1] * dim[2] + idx[1] * dim[2] + idx[2];
+}
+
+const std::array<int, 2> GetIndex(const int idx, const std::array<int, 2>& dim) {
+    CheckError(0 <= idx && idx < dim[0] * dim[1], "Index out of range.");
+    return std::array<int, 2>{ idx / dim[1], idx % dim[1] };
+}
+
+const std::array<int, 3> GetIndex(const int idx, const std::array<int, 3>& dim) {
+    CheckError(0 <= idx && idx < dim[0] * dim[1] * dim[2], "Index out of range.");
+    return std::array<int, 3>{ idx / (dim[1] * dim[2]), (idx / dim[2]) % dim[1], idx % dim[2] };
+}

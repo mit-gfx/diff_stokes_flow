@@ -38,7 +38,7 @@ void ParametricShape<dim>::Initialize(const std::array<int, dim>& cell_nums, con
 
     #pragma omp parallel for
     for (int i = 0; i < node_num_prod_; ++i) {
-        const auto idx = GetIndex(i);
+        const auto idx = GetIndex(i, node_nums_);
         // Cast to real.
         std::array<real, dim> p;
         for (int j = 0; j < dim; ++j) p[j] = static_cast<real>(idx[j]);
@@ -60,38 +60,13 @@ const int ParametricShape<dim>::node_num(const int i) const {
 
 template<int dim>
 const real ParametricShape<dim>::signed_distance(const std::array<int, dim>& node_idx) const {
-    return signed_distances_[GetIndex(node_idx)];
+    return signed_distances_[GetIndex(node_idx, node_nums_)];
 }
 
 template<int dim>
 const std::vector<real>& ParametricShape<dim>::signed_distance_gradient(
     const std::array<int, dim>& node_idx) const {
-    return signed_distance_gradients_[GetIndex(node_idx)];
-}
-
-template<int dim>
-const int ParametricShape<dim>::GetIndex(const std::array<int, dim>& node_idx) const {
-    for (int i = 0; i < dim; ++i)
-        CheckError(0 <= node_idx[i] && node_idx[i] < node_nums_[i], "Node index out of bound.");
-    int node_idx_linear = node_idx[0];
-    for (int i = 0; i < dim - 1; ++i) {
-        node_idx_linear *= node_nums_[i + 1];
-        node_idx_linear += node_idx[i + 1];
-    }
-    return node_idx_linear;
-}
-
-template<int dim>
-const std::array<int, dim> ParametricShape<dim>::GetIndex(const int node_idx) const {
-    CheckError(0 <= node_idx && node_idx < node_num_prod_, "Node index out of bound.");
-    std::array<int, dim> node_idx_array;
-    node_idx_array[dim - 1] = node_idx % node_nums_[dim - 1];
-    int node_idx_copy = node_idx / node_nums_[dim - 1];
-    for (int i = dim - 2; i >= 0; --i) {
-        node_idx_array[i] = node_idx_copy % node_nums_[i];
-        node_idx_copy /= node_nums_[i];
-    }
-    return node_idx_array;
+    return signed_distance_gradients_[GetIndex(node_idx, node_nums_)];
 }
 
 template class ParametricShape<2>;

@@ -9,7 +9,8 @@ if __name__ == '__main__':
     tests = [
         # Parametric shapes.
         'spline_2d',
-        'shape_composition_2d'
+        'shape_composition_2d',
+        'cell_2d'
     ]
 
     failure_cnt = 0
