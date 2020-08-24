@@ -6,7 +6,12 @@ swig -c++ -python py_diff_stokes_flow_core.i
 cd ../../
 mkdir -p build
 cd build
-cmake ..
+if [ $# -eq 0 ]
+then
+    cmake -DPARDISO_AVAILABLE=OFF ..
+else
+    cmake -DPARDISO_AVAILABLE=ON ..
+fi
 make -j4
 ./diff_stokes_flow_demo
 

@@ -17,6 +17,18 @@ if(OpenMP_CXX_FOUND)
     add_definitions(-DEIGEN_DONT_PARALLELIZE)
 endif()
 
+# Pardiso.
+option(PARDISO_AVAILABLE "Pardiso" OFF)
+if(PARDISO_AVAILABLE)
+    add_definitions(-DPARDISO_AVAILABLE)
+    add_library(pardiso SHARED IMPORTED)
+    set_target_properties(pardiso PROPERTIES
+        IMPORTED_LOCATION "$ENV{PARDISO_LIC_PATH}/libpardiso600-GNU720-X86-64.so"
+    )
+else()
+    message("Pardiso not detected.")
+endif()
+
 # Include directories.
 include_directories("../external/eigen")
 include_directories("./core/include")
@@ -26,12 +38,20 @@ include_directories(${PYTHON_INCLUDES})
 # The core library.
 file(GLOB_RECURSE CORE_CPP "./core/src/**/*.cpp")
 add_library(diff_stokes_flow_core SHARED ${CORE_CPP})
-target_link_libraries(diff_stokes_flow_core OpenMP::OpenMP_CXX)
+if(PARDISO_AVAILABLE)
+    target_link_libraries(diff_stokes_flow_core pardiso lapack blas OpenMP::OpenMP_CXX pthread m)
+else()
+    target_link_libraries(diff_stokes_flow_core OpenMP::OpenMP_CXX)
+endif()
 
 # Python wrapper library.
 file(GLOB_RECURSE PYTHON_BINDING "./core/src/**/*.cpp" "./core/src/py_diff_stokes_flow_core_wrap.cxx")
 add_library(py_diff_stokes_flow_core SHARED ${CORE_HEADER} ${PYTHON_BINDING})
-target_link_libraries(py_diff_stokes_flow_core OpenMP::OpenMP_CXX)
+if(PARDISO_AVAILABLE)
+    target_link_libraries(py_diff_stokes_flow_core pardiso lapack blas OpenMP::OpenMP_CXX pthread m)
+else()
+    target_link_libraries(py_diff_stokes_flow_core OpenMP::OpenMP_CXX)
+endif()
 
 # Demo.
 file(GLOB DEMO_CPP "./main.cpp")

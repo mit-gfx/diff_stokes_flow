@@ -1,6 +1,7 @@
 #include "scene/scene.h"
 #include "common/common.h"
 #include "Eigen/SparseLU"
+#include "solver/pardiso_solver.h"
 
 template<int dim>
 Scene<dim>::Scene() : boundary_type_(BoundaryType::NoSeparation) {}
@@ -182,8 +183,9 @@ const std::vector<real> Scene<dim>::Solve(const std::string& qp_solver_name) con
         CheckError(solver.info() == Eigen::Success, "SparseLU fails to solve the right-hand vector: "
             + std::to_string(solver.info()));
     } else if (qp_solver_name == "pardiso") {
-        // TODO: Add Pardiso.
-        PrintError("Pardiso has not been included.");
+        PardisoSolver solver;
+        solver.Compute(KC);
+        x = solver.Solve(d_ext);
     } else {
         PrintError("Unsupported QP solver: " + qp_solver_name + ". Please use eigen or pardiso.");
     }
