@@ -18,7 +18,9 @@ public:
 
     const int cell_num(const int i) const;
     const std::array<int, dim>& cell_nums() const { return cell_nums_; }
+    const int cell_num_prod() const { return cell_num_prod_; }
     const int node_num(const int i) const;
+    const std::array<int, dim>& node_nums() const { return node_nums_; }
     const int node_num_prod() const { return node_num_prod_; }
     const int param_num() const { return param_num_; }
     const std::vector<real>& params() const { return params_; }

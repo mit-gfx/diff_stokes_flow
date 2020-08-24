@@ -15,3 +15,4 @@ conda activate diff_stokes_flow
 ```
 
 ## Examples
+- `amplifier_2d`;

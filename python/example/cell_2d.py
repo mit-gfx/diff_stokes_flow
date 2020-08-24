@@ -54,6 +54,8 @@ def test_cell_2d(verbose):
             print_error('boundary area is inconsistent.')
         return False
 
+    return True
+
 if __name__ == '__main__':
     verbose = True
     test_cell_2d(verbose)

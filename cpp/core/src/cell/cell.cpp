@@ -2,14 +2,17 @@
 #include "common/common.h"
 
 template<int dim>
-void Cell<dim>::Initialize(const real E, const real nu, const real threshold, const int edge_sample_num,
-    const std::vector<real>& sdf_at_corners) {
+Cell<dim>::Cell() {
     corner_num_prod_ = 1;
     for (int i = 0; i < dim; ++i) {
         corner_num_prod_ *= 2;
         corner_nums_[i] = 2;
     }
+}
 
+template<int dim>
+void Cell<dim>::Initialize(const real E, const real nu, const real threshold, const int edge_sample_num,
+    const std::vector<real>& sdf_at_corners) {
     E_ = E;
     nu_ = nu;
     la_ = E * nu / (1 + nu) / (1 - 2 * nu);

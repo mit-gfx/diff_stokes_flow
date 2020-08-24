@@ -6,6 +6,8 @@
 template<int dim>
 struct ParametricShapeInfo {
 public:
+    ParametricShapeInfo() : name(""), shape(nullptr), param_begin_idx(0), param_num(0) {}
+
     std::string name;
     std::shared_ptr<ParametricShape<dim>> shape;
     int param_begin_idx;
@@ -17,6 +19,7 @@ template<int dim>
 class ShapeComposition : public ParametricShape<dim> {
 public:
     void AddParametricShape(const std::string& name, const int param_num);
+    void Clear() { shape_info_.clear(); }
 
     const real ComputeSignedDistanceAndGradients(const std::array<real, dim>& point,
         std::vector<real>& grad) const override;

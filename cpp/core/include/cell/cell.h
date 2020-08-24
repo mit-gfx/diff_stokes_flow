@@ -7,11 +7,13 @@
 template<int dim>
 class Cell {
 public:
-    Cell() {}
+    Cell();
 
     void Initialize(const real E, const real nu, const real threshold, const int edge_sample_num,
         const std::vector<real>& sdf_at_corners);
 
+    const int corner_num_prod() const { return corner_num_prod_; }
+    const std::array<int, dim>& corner_nums() const { return corner_nums_; }
     const Eigen::Matrix<real, dim, 1>& normal() const { return normal_; }
     const real offset() const { return offset_; }
     const real sample_area(const int sample_idx) const;
