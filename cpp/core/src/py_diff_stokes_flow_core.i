@@ -1,7 +1,7 @@
 %module py_diff_stokes_flow_core
 %{
 #include "../include/shape/parametric_shape.h"
-#include "../include/shape/spline.h"
+#include "../include/shape/bezier.h"
 #include "../include/shape/shape_composition.h"
 #include "../include/cell/cell.h"
 #include "../include/scene/scene.h"
@@ -49,4 +49,4 @@ namespace std {
 %template(Scene2d) Scene<2>;
 %template(Scene3d) Scene<3>;
 
-%include "../include/shape/spline.h"
+%include "../include/shape/bezier.h"

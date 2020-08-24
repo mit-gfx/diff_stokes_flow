@@ -29,7 +29,7 @@ def test_scene_2d(verbose):
     def loss_and_grad(x):
         scene = Scene2d()
         # Initialize shape.
-        scene.InitializeShapeComposition(cell_nums, ['spline', 'spline'], [x[:8], x[8:]])
+        scene.InitializeShapeComposition(cell_nums, ['bezier', 'bezier'], [x[:8], x[8:]])
 
         # Initialize cell.
         E = 100

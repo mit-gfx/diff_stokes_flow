@@ -8,7 +8,7 @@ if __name__ == '__main__':
     # If you want to add a new test, simply add its name here --- you can find their names from README.md.
     tests = [
         # Parametric shapes.
-        'spline_2d',
+        'bezier_2d',
         'shape_composition_2d',
         'cell_2d',
         'scene_2d'

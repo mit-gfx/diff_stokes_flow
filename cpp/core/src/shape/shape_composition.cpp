@@ -1,13 +1,13 @@
 #include "shape/shape_composition.h"
 #include "common/common.h"
-#include "shape/spline.h"
+#include "shape/bezier.h"
 
 template<>
 void ShapeComposition<2>::AddParametricShape(const std::string& name, const int param_num) {
-    if (name == "spline") {
+    if (name == "bezier") {
         ParametricShapeInfo<2> info;
         info.name = name;
-        info.shape = std::make_shared<Spline2d>();
+        info.shape = std::make_shared<Bezier2d>();
         info.param_begin_idx = 0;
         info.param_num = 8;
         shape_info_.push_back(info);

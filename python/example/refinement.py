@@ -30,7 +30,7 @@ def solve_forward_amplifier_2d(scale):
     scaled_control_points_lower = control_points_lower * scale
     scaled_control_points_upper = control_points_upper * scale
 
-    scene.InitializeShapeComposition(scaled_cell_nums, ['spline', 'spline'],
+    scene.InitializeShapeComposition(scaled_cell_nums, ['bezier', 'bezier'],
         [scaled_control_points_lower.ravel(), scaled_control_points_upper.ravel()])
 
     # Initialize cell.

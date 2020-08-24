@@ -43,8 +43,8 @@ def test_shape_composition_2d(verbose):
     ])
 
     shape = ShapeComposition2d()
-    shape.AddParametricShape("spline", 8)
-    shape.AddParametricShape("spline", 8)
+    shape.AddParametricShape('bezier', 8)
+    shape.AddParametricShape('bezier', 8)
     control_points = np.concatenate([control_points_lower.ravel(), control_points_upper.ravel()])
     control_points += np.random.normal(size=control_points.size) * 0.01
     shape.Initialize(cell_nums, control_points)

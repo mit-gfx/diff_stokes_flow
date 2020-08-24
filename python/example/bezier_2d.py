@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-from py_diff_stokes_flow.core.py_diff_stokes_flow_core import Spline2d, StdIntArray2d, StdRealVector
+from py_diff_stokes_flow.core.py_diff_stokes_flow_core import Bezier2d, StdIntArray2d, StdRealVector
 from py_diff_stokes_flow.common.common import ndarray, create_folder, print_error
 
 def visualize_level_set(ls):
@@ -24,9 +24,9 @@ def visualize_level_set(ls):
     plt.show()
     plt.close()
 
-def test_spline_2d(verbose):
+def test_bezier_2d(verbose):
     np.random.seed(42)
-    folder = Path('spline_2d')
+    folder = Path('bezier_2d')
 
     cell_nums = (32, 24)
     control_points = ndarray([
@@ -36,9 +36,9 @@ def test_spline_2d(verbose):
         [0, 12]
     ])
     control_points[:, 1] += np.random.normal(size=4)
-    spline = Spline2d()
-    spline.Initialize(cell_nums, control_points.ravel())
-    sdf = ndarray(spline.signed_distances())
+    bezier = Bezier2d()
+    bezier.Initialize(cell_nums, control_points.ravel())
+    sdf = ndarray(bezier.signed_distances())
     sdf_master = np.load(folder / 'sdf_master.npy')
     if np.max(np.abs(sdf - sdf_master)) > 0:
         if verbose:
@@ -46,25 +46,25 @@ def test_spline_2d(verbose):
         return False
 
     if verbose:
-        visualize_level_set(spline)
+        visualize_level_set(bezier)
 
     # Verify the gradients.
-    nx = spline.node_num(0)
-    ny = spline.node_num(1)
+    nx = bezier.node_num(0)
+    ny = bezier.node_num(1)
     sdf_weight = np.random.normal(size=(nx, ny))
     def loss_and_grad(x):
-        spline = Spline2d()
-        spline.Initialize(cell_nums, x.ravel())
-        sdf = ndarray(spline.signed_distances())
+        bezier = Bezier2d()
+        bezier.Initialize(cell_nums, x.ravel())
+        sdf = ndarray(bezier.signed_distances())
         loss = sdf_weight.ravel().dot(sdf)
         grad = 0
         for i in range(nx):
             for j in range(ny):
-                grad += sdf_weight[i, j] * ndarray(spline.signed_distance_gradients((i, j)))
+                grad += sdf_weight[i, j] * ndarray(bezier.signed_distance_gradients((i, j)))
         return loss, grad
     from py_diff_stokes_flow.common.grad_check import check_gradients
     return check_gradients(loss_and_grad, control_points.ravel(), verbose=verbose)
 
 if __name__ == '__main__':
     verbose = True
-    test_spline_2d(verbose)
+    test_bezier_2d(verbose)

@@ -1,8 +1,8 @@
-#include "shape/spline.h"
+#include "shape/bezier.h"
 #include "common/common.h"
 #include "unsupported/Eigen/Polynomials"
 
-void Spline2d::InitializeCustomizedData() {
+void Bezier2d::InitializeCustomizedData() {
     CheckError(param_num() == 8, "Inconsistent number of parameters.");
     // s(t) = control_points * A * [1, t, t^2, t^3].
     // s'(t) = control_points * A * [0, 1, 2 * t, 3 * t * t].
@@ -24,7 +24,7 @@ void Spline2d::InitializeCustomizedData() {
         0, 0, 3;
     cA_ = control_points * A_;
     cAB_ = control_points * A_ * B_;
-    // When solving for the minimal distance from a point to the spline, we solve:
+    // When solving for the minimal distance from a point to the bezier curve, we solve:
     // s'(t)^T * (s(t) - point) = 0.
     // [1, t, t^2] * B^T * A^T * control_points^T * control_points * A * [1, t, t^2, t^3] -
     // [1, t, t^2] * B^T * A^T * control_points^T * point = 0.
@@ -59,7 +59,7 @@ void Spline2d::InitializeCustomizedData() {
         }
 }
 
-const real Spline2d::ComputeSignedDistanceAndGradients(const std::array<real, 2>& point,
+const real Bezier2d::ComputeSignedDistanceAndGradients(const std::array<real, 2>& point,
     std::vector<real>& grad) const {
     const Vector2r p(point[0], point[1]);
     Vector6r coeff = c_;
@@ -82,7 +82,7 @@ const real Spline2d::ComputeSignedDistanceAndGradients(const std::array<real, 2>
     real min_t = 0;
     Vector2r min_proj(0, 0);
     for (const real t : ts) {
-        Vector2r proj = GetSplinePoint(t);
+        Vector2r proj = GetBezierPoint(t);
         const real dist = (proj - p).norm();
         if (dist < min_dist) {
             min_dist = dist;
@@ -92,7 +92,7 @@ const real Spline2d::ComputeSignedDistanceAndGradients(const std::array<real, 2>
     }
 
     // Determine the sign.
-    const Vector2r min_tangent = GetSplineDerivative(min_t);
+    const Vector2r min_tangent = GetBezierDerivative(min_t);
     const Vector2r q = min_proj - p;
     // Consider the sign of q x min_tangent: positive = interior.
     const real z = q.x() * min_tangent.y() - q.y() * min_tangent.x();
@@ -101,7 +101,7 @@ const real Spline2d::ComputeSignedDistanceAndGradients(const std::array<real, 2>
     // Compute the gradient.
     // control_point -> coeff -> min_t -> min_proj -> min_dist.
     // According to the envelope theorem, we can safely assume min_t does not change during the gradient computation.
-    // min_proj = GetSplinePoint(t) = cA_ * ts.
+    // min_proj = GetBezierPoint(t) = cA_ * ts.
     const real min_t2 = min_t * min_t;
     const real min_t3 = min_t * min_t2;
     const Vector4r min_ts(1, min_t, min_t2, min_t3);
@@ -119,12 +119,12 @@ const real Spline2d::ComputeSignedDistanceAndGradients(const std::array<real, 2>
     return sign * min_dist;
 }
 
-const Vector2r Spline2d::GetSplinePoint(const real t) const {
+const Vector2r Bezier2d::GetBezierPoint(const real t) const {
     const Vector4r ts(1, t, t * t, t * t * t);
     return cA_ * ts;
 }
 
-const Vector2r Spline2d::GetSplineDerivative(const real t) const {
+const Vector2r Bezier2d::GetBezierDerivative(const real t) const {
     const Vector3r ts(1, t, t * t);
     return cAB_ * ts;
 }
