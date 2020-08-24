@@ -111,7 +111,7 @@ for s, u_s in zip(scale, u):
 ax_error.plot(scale, error)
 ax_error.set_xlabel('refinement')
 ax_error.set_ylabel('relative error')
-ax_error.set_xscale('log', basex=2)
+ax_error.set_xscale('log', base=2)
 ax_error.grid(True)
 fig.savefig('refinement.pdf')
 plt.show()
