@@ -203,5 +203,10 @@ const int Scene<dim>::GetNodeDof(const std::array<int, dim>& node_idx, const int
     return GetIndex(node_idx, shape_.node_nums()) * dim + node_dim;
 }
 
+template<int dim>
+const real Scene<dim>::GetSignedDistance(const std::array<int, dim>& node_idx) const {
+    return shape_.signed_distance(node_idx);
+}
+
 template class Scene<2>;
 template class Scene<3>;

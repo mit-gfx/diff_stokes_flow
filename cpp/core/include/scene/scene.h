@@ -18,6 +18,7 @@ public:
     const std::vector<real> Solve(const std::string& qp_solver_name) const;
 
     const int GetNodeDof(const std::array<int, dim>& node_idx, const int node_dim) const;
+    const real GetSignedDistance(const std::array<int, dim>& node_idx) const;
 
 private:
     // Geometry information.
