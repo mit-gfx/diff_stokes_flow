@@ -98,43 +98,33 @@ def plot_velocity_field(ax, u_field, s, u_max):
     ax.set_yticks([])
 
 # The under refinement experiment.
-fig = plt.figure(figsize=(18, 9))
-ax_low_res = fig.add_subplot(231)
+fig = plt.figure(figsize=(24, 8))
+ax_low_res = fig.add_subplot(242)
 plot_velocity_field(ax_low_res, u_scale[0], scale[0], u_scale_norm_max)
 ax_low_res.set_xlabel('{} x {}'.format(cell_nums[0] * scale[0], cell_nums[1] * scale[0]))
-ax_low_res.set_aspect('equal', 'box')
 
-ax_mid_res = fig.add_subplot(232)
+ax_mid_res = fig.add_subplot(243)
 plot_velocity_field(ax_mid_res, u_scale[3], scale[3], u_scale_norm_max)
 ax_mid_res.set_xlabel('{} x {}'.format(cell_nums[0] * scale[3], cell_nums[1] * scale[3]))
-ax_mid_res.set_aspect('equal', 'box')
 
-ax_high_res = fig.add_subplot(233)
+ax_high_res = fig.add_subplot(244)
 plot_velocity_field(ax_high_res, u_scale[-1], scale[-1], u_scale_norm_max)
 ax_high_res.set_xlabel('{} x {}'.format(cell_nums[0] * scale[-1], cell_nums[1] * scale[-1]))
-ax_high_res.set_aspect('equal', 'box')
 
 # The convergence experiment.
-ax_low_nu = fig.add_subplot(234)
+ax_low_nu = fig.add_subplot(246)
 plot_velocity_field(ax_low_nu, u_nu[0], scale[0], u_nu_norm_max)
 ax_low_nu.set_xlabel('$\\nu$ = {}'.format(nu[0]))
-ax_low_nu.set_aspect('equal', 'box')
 
-ax_mid_nu = fig.add_subplot(235)
+ax_mid_nu = fig.add_subplot(247)
 plot_velocity_field(ax_mid_nu, u_nu[3], scale[0], u_nu_norm_max)
 ax_mid_nu.set_xlabel('$\\nu$ = {}'.format(nu[3]))
-ax_mid_nu.set_aspect('equal', 'box')
 
-ax_high_nu = fig.add_subplot(236)
+ax_high_nu = fig.add_subplot(248)
 plot_velocity_field(ax_high_nu, u_nu[-1], scale[0], u_nu_norm_max)
 ax_high_nu.set_xlabel('$\\nu$ = {}'.format(nu[-1]))
-ax_high_nu.set_aspect('equal', 'box')
 
-fig.savefig('refinement_right.pdf')
-plt.show()
-
-fig = plt.figure(figsize=(9, 9))
-ax_error = fig.add_subplot(211)
+ax_error = fig.add_subplot(241)
 error = []
 for s, u_s in zip(scale, u_scale):
     # Compute the maximum discrepancy.
@@ -152,12 +142,12 @@ ax_error.set_xlabel('refinement')
 ax_error.set_ylabel('relative error (%)')
 ax_error.grid(True)
 
-ax_error = fig.add_subplot(212)
+ax_error = fig.add_subplot(245)
 error = [np.max(np.abs(u_n - u_nu[-1])) / u_nu_norm_max for u_n in u_nu]
 ax_error.plot(nu, ndarray(error) * 100, 'o-', linewidth=2, color='tab:blue', markersize=8)
 ax_error.set_xlabel('$\\nu$')
 ax_error.set_ylabel('relative error (%)')
 ax_error.grid(True)
 
-fig.savefig('refinement_left.pdf')
+fig.savefig('refinement.pdf')
 plt.show()
