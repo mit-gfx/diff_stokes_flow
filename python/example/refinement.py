@@ -76,13 +76,13 @@ u_scale_norm_max = np.max(np.sqrt(np.sum(u_scale[-1] ** 2, axis=(2,))).ravel())
 import matplotlib.pyplot as plt
 import matplotlib.colors
 
-plt.rc('font', size=16)
-plt.rc('axes', titlesize=16)
-plt.rc('axes', labelsize=16)
-plt.rc('xtick', labelsize=16)
-plt.rc('ytick', labelsize=16)
-plt.rc('legend', fontsize=16)
-plt.rc('figure', titlesize=16)
+plt.rc('font', size=20)
+plt.rc('axes', titlesize=24)
+plt.rc('axes', labelsize=24)
+plt.rc('xtick', labelsize=18)
+plt.rc('ytick', labelsize=18)
+plt.rc('legend', fontsize=20)
+plt.rc('figure', titlesize=20)
 
 def plot_velocity_field(ax, u_field, s, u_max):
     x_size = ndarray(np.arange(u_field.shape[0])) / s
@@ -98,33 +98,25 @@ def plot_velocity_field(ax, u_field, s, u_max):
     ax.set_yticks([])
 
 # The under refinement experiment.
-fig = plt.figure(figsize=(24, 8))
-ax_low_res = fig.add_subplot(242)
+fig = plt.figure(figsize=(22, 10))
+ax_low_res = fig.add_subplot(232)
 plot_velocity_field(ax_low_res, u_scale[0], scale[0], u_scale_norm_max)
 ax_low_res.set_xlabel('{} x {}'.format(cell_nums[0] * scale[0], cell_nums[1] * scale[0]))
 
-ax_mid_res = fig.add_subplot(243)
-plot_velocity_field(ax_mid_res, u_scale[3], scale[3], u_scale_norm_max)
-ax_mid_res.set_xlabel('{} x {}'.format(cell_nums[0] * scale[3], cell_nums[1] * scale[3]))
-
-ax_high_res = fig.add_subplot(244)
+ax_high_res = fig.add_subplot(233)
 plot_velocity_field(ax_high_res, u_scale[-1], scale[-1], u_scale_norm_max)
 ax_high_res.set_xlabel('{} x {}'.format(cell_nums[0] * scale[-1], cell_nums[1] * scale[-1]))
 
 # The convergence experiment.
-ax_low_nu = fig.add_subplot(246)
+ax_low_nu = fig.add_subplot(235)
 plot_velocity_field(ax_low_nu, u_nu[0], scale[0], u_nu_norm_max)
 ax_low_nu.set_xlabel('$\\nu$ = {}'.format(nu[0]))
 
-ax_mid_nu = fig.add_subplot(247)
-plot_velocity_field(ax_mid_nu, u_nu[3], scale[0], u_nu_norm_max)
-ax_mid_nu.set_xlabel('$\\nu$ = {}'.format(nu[3]))
-
-ax_high_nu = fig.add_subplot(248)
+ax_high_nu = fig.add_subplot(236)
 plot_velocity_field(ax_high_nu, u_nu[-1], scale[0], u_nu_norm_max)
 ax_high_nu.set_xlabel('$\\nu$ = {}'.format(nu[-1]))
 
-ax_error = fig.add_subplot(241)
+ax_error = fig.add_subplot(231)
 error = []
 for s, u_s in zip(scale, u_scale):
     # Compute the maximum discrepancy.
@@ -142,7 +134,7 @@ ax_error.set_xlabel('refinement')
 ax_error.set_ylabel('relative error (%)')
 ax_error.grid(True)
 
-ax_error = fig.add_subplot(245)
+ax_error = fig.add_subplot(234)
 error = [np.max(np.abs(u_n - u_nu[-1])) / u_nu_norm_max for u_n in u_nu]
 ax_error.plot(nu, ndarray(error) * 100, 'o-', linewidth=2, color='tab:blue', markersize=8)
 ax_error.set_xlabel('$\\nu$')
