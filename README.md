@@ -40,4 +40,15 @@ liblapack-dev is already the newest version (3.7.1-4ubuntu1).
 ```
 
 ## Examples
-- `refinement`;
+Navigate to the `python/example` folder and run `python [example_name].py` where `[example_name]` can be any of the following:
+
+### Numerical tests
+- `bezier_2d`: show the level-set of a Bezier curve and check the implementation of gradients.
+- `cell_2d`: check if all quantities in `Cell2d` are implemented correctly.
+- `scene_2d`: check the gradients of loss defined in a 2-dimensional scene.
+- `shape_composition_2d`: check the gradients of composing multiple primitive level-sets.
+Finally, if you would like to run all these numerical experiments above, you can simply call `run_all_tests`:
+- `run_all_tests`: this will sequentially run all the aforementioned numerical tests.
+
+### Demos
+- `refinement`: generate Fig. 8 in the paper.
