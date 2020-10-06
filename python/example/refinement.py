@@ -4,65 +4,21 @@ sys.path.append('../')
 import numpy as np
 from pathlib import Path
 
-from py_diff_stokes_flow.core.py_diff_stokes_flow_core import Scene2d, StdRealVector
+from py_diff_stokes_flow.core.py_diff_stokes_flow_core import StdRealVector
+from py_diff_stokes_flow.env.refinement_env_2d import RefinementEnv2d
 from py_diff_stokes_flow.common.common import ndarray, print_error
 
-np.random.seed(42)
-
-cell_nums = (32, 24)
-control_points_lower = ndarray([
-    [32, 10],
-    [22, 10],
-    [12, 10],
-    [0, 4]
-])
-control_points_upper = ndarray([
-    [0, 20],
-    [12, 14],
-    [22, 14],
-    [32, 14]
-])
+cell_nums = RefinementEnv2d(0.45, 1).cell_nums()
 
 def solve_forward_amplifier_2d(nu, scale):
-    scene = Scene2d()
-    # Initialize shape.
-    scaled_cell_nums = (cell_nums[0] * scale, cell_nums[1] * scale)
-    scaled_control_points_lower = control_points_lower * scale
-    scaled_control_points_upper = control_points_upper * scale
-
-    scene.InitializeShapeComposition(scaled_cell_nums, ['bezier', 'bezier'],
-        [scaled_control_points_lower.ravel(), scaled_control_points_upper.ravel()])
-
-    # Initialize cell.
-    E = 100
-    threshold = 1e-3
-    edge_sample_num = 2
-    scene.InitializeCell(E, nu, threshold, edge_sample_num)
-
-    # Initialize Dirichlet boundary conditions.
-    boundary_dofs = []
-    boundary_values = []
-    inlet_velocity = 1.0 * scale
-    for j in range(scaled_cell_nums[1] + 1):
-        if scaled_control_points_lower[3, 1] < j < scaled_control_points_upper[0, 1]:
-            boundary_dofs.append(scene.GetNodeDof([0, j], 0))
-            boundary_values.append(inlet_velocity)
-            boundary_dofs.append(scene.GetNodeDof([0, j], 1))
-            boundary_values.append(0.0)
-    scene.InitializeDirichletBoundaryCondition(boundary_dofs, boundary_values)
-    scene.InitializeBoundaryType('no_separation')
-
-    # Solve for the velocity.
-    u = StdRealVector(0)
-    dl_du = np.zeros((scaled_cell_nums[0] + 1) * (scaled_cell_nums[1] + 1) * 2)
-    dl_dparam = StdRealVector(0)
-    scene.Solve('eigen', dl_du, u, dl_dparam)
-    u = ndarray(u).reshape((scaled_cell_nums[0] + 1, scaled_cell_nums[1] + 1, 2)) / scale
-
-    # Zero out velocities in the solid phase.
-    for i in range(scaled_cell_nums[0] + 1):
-        for j in range(scaled_cell_nums[1] + 1):
-            if scene.GetSignedDistance((i, j)) >= 0:
+    env = RefinementEnv2d(nu, scale)
+    _, _, info = env.solve(env.sample(), { 'solver': 'eigen' })
+    u = info['u']
+    node_nums = env.node_nums()
+    u = env.reshape_velocity_field(u)
+    for i in range(node_nums[0]):
+        for j in range(node_nums[1]):
+            if info['scene'].GetSignedDistance((i, j)) >= 0:
                 u[i, j] = 0
     return u
 

@@ -1,7 +1,5 @@
 #include "scene/scene.h"
 #include "common/common.h"
-#include "Eigen/SparseLU"
-#include "solver/pardiso_solver.h"
 
 template<int dim>
 Scene<dim>::Scene() : boundary_type_(BoundaryType::NoSeparation) {}
@@ -83,9 +81,8 @@ void Scene<dim>::InitializeBoundaryType(const std::string& boundary_type) {
 }
 
 template<int dim>
-void Scene<dim>::Solve(const std::string& qp_solver_name, const std::vector<real>& partial_loss_partial_solution_field,
-    std::vector<real>& solution_field, std::vector<real>& d_loss_d_params) const {
-    CheckError(!cells_.empty() && shape_.param_num(), "You must calll all initialization function first.");
+const std::vector<real> Scene<dim>::Forward(const std::string& qp_solver_name) {
+    CheckError(!cells_.empty() && shape_.param_num(), "You must call all initialization function first.");
     // Now assemble the QP problem.
     // min 0.5 * u * K * u
     // s.t. C * u = d
@@ -214,18 +211,18 @@ void Scene<dim>::Solve(const std::string& qp_solver_name, const std::vector<real
         KC_nonzeros.push_back(Eigen::Triplet<real>(var_num + row, col, val));
         KC_nonzeros.push_back(Eigen::Triplet<real>(col, var_num + row, val));
     }
-    const SparseMatrix KC = ToSparseMatrix(var_num + C_row_num, var_num + C_row_num, KC_nonzeros);
+    KC_ = ToSparseMatrix(var_num + C_row_num, var_num + C_row_num, KC_nonzeros);
     VectorXr d_ext = VectorXr::Zero(var_num + C_row_num);
     d_ext.tail(C_row_num) = d;
 
-    std::vector<SparseMatrixElements> dKC_nonzeros = dK_nonzeros;
+    dKC_nonzeros_ = dK_nonzeros;
     for (int p = 0; p < param_num; ++p) {
         for (const auto& triplet : dC_nonzeros[p]) {
             const int row = triplet.row();
             const int col = triplet.col();
             const real val = triplet.value();
-            dKC_nonzeros[p].push_back(Eigen::Triplet<real>(var_num + row, col, val));
-            dKC_nonzeros[p].push_back(Eigen::Triplet<real>(col, var_num + row, val));
+            dKC_nonzeros_[p].push_back(Eigen::Triplet<real>(var_num + row, col, val));
+            dKC_nonzeros_[p].push_back(Eigen::Triplet<real>(col, var_num + row, val));
         }
     }
 
@@ -242,52 +239,74 @@ void Scene<dim>::Solve(const std::string& qp_solver_name, const std::vector<real
     if (boundary_type_ != BoundaryType::NoSlip && boundary_type_ != BoundaryType::NoSeparation) {
         PrintError("You must implement delta d_ext since you are using a new boundary type.");
     }
-    VectorXr dloss_du = VectorXr::Zero(var_num + C_row_num);
-    CheckError(static_cast<int>(partial_loss_partial_solution_field.size()) == var_num,
-        "Inconsistent length of partial_loss_partial_solution_field.");
-    for (int i = 0; i < var_num; ++i) dloss_du(i) = partial_loss_partial_solution_field[i];
     VectorXr x = VectorXr::Zero(var_num + C_row_num);
-    VectorXr y = VectorXr::Zero(var_num + C_row_num);
     if (qp_solver_name == "eigen") {
-        Eigen::SparseLU<SparseMatrix, Eigen::COLAMDOrdering<int>> solver;
-        solver.compute(KC);
-        CheckError(solver.info() == Eigen::Success, "SparseLU fails to compute the sparse matrix: "
-            + std::to_string(solver.info()));
-        x = solver.solve(d_ext);
-        CheckError(solver.info() == Eigen::Success, "SparseLU fails to solve d_ext: " + std::to_string(solver.info()));
-        y = solver.solve(-dloss_du);
-        CheckError(solver.info() == Eigen::Success, "SparseLU fails to solve dloss_du: "
-            + std::to_string(solver.info()));
+        eigen_solver_.compute(KC_);
+        CheckError(eigen_solver_.info() == Eigen::Success, "SparseLU fails to compute the sparse matrix: "
+            + std::to_string(eigen_solver_.info()));
+        x = eigen_solver_.solve(d_ext);
+        CheckError(eigen_solver_.info() == Eigen::Success, "SparseLU fails to solve d_ext: "
+            + std::to_string(eigen_solver_.info()));
     } else if (qp_solver_name == "pardiso") {
-        PardisoSolver solver;
-        solver.Compute(KC);
-        x = solver.Solve(d_ext);
-        y = solver.Solve(-dloss_du);
+        pardiso_solver_.Compute(KC_);
+        x = pardiso_solver_.Solve(d_ext);
     } else {
         PrintError("Unsupported QP solver: " + qp_solver_name + ". Please use eigen or pardiso.");
     }
     // Sanity check.
-    const real abs_error_x = (KC * x - d_ext).norm();
-    const real abs_error_y = (KC * y + dloss_du).norm();
     const real abs_tol = ToReal(1e-4);
     const real rel_tol = ToReal(1e-3);
+    const real abs_error_x = (KC_ * x - d_ext).norm();
     CheckError(abs_error_x <= d_ext.norm() * rel_tol + abs_tol, "QP solver fails to solve d_ext.");
-    CheckError(abs_error_y <= dloss_du.norm() * rel_tol + abs_tol, "QP solver fails to solve dloss_du.");
 
     // Return the solution.
-    const VectorXr u = x.head(var_num);
-    solution_field = std::vector<real>(u.data(), u.data() + var_num);
+    return ToStdVector(x);
+}
 
-    // Return the gradients.
+template<int dim>
+const std::vector<real> Scene<dim>::Backward(const std::string& qp_solver_name,
+    const std::vector<real>& forward_result,
+    const std::vector<real>& partial_loss_partial_solution_field) {
+    // Obtain dimension information.
+    const int var_num = shape_.node_num_prod() * dim;
+    const int C_row_num = static_cast<int>(forward_result.size()) - var_num;
+
     // - For each parameter index i, compute dloss_dparams[i] = y.dot(dKC[i] * x).
-    d_loss_d_params.clear();
-    d_loss_d_params.resize(param_num, 0);
+    VectorXr dloss_du = VectorXr::Zero(var_num + C_row_num);
+    CheckError(static_cast<int>(partial_loss_partial_solution_field.size()) == var_num,
+        "Inconsistent length of partial_loss_partial_solution_field.");
+    for (int i = 0; i < var_num; ++i) dloss_du(i) = partial_loss_partial_solution_field[i];
+    VectorXr y = VectorXr::Zero(var_num + C_row_num);
+    if (qp_solver_name == "eigen") {
+        y = eigen_solver_.solve(-dloss_du);
+        CheckError(eigen_solver_.info() == Eigen::Success, "SparseLU fails to solve dloss_du: "
+            + std::to_string(eigen_solver_.info()));
+    } else if (qp_solver_name == "pardiso") {
+        y = pardiso_solver_.Solve(-dloss_du);
+    } else {
+        PrintError("Unsupported QP solver: " + qp_solver_name + ". Please use eigen or pardiso.");
+    }
+
+    const real abs_tol = ToReal(1e-4);
+    const real rel_tol = ToReal(1e-3);
+    const real abs_error_y = (KC_ * y + dloss_du).norm();
+    CheckError(abs_error_y <= dloss_du.norm() * rel_tol + abs_tol, "QP solver fails to solve dloss_du.");
+
+    const int param_num = shape_.param_num();
+    std::vector<real> d_loss_d_params(param_num, 0);
     #pragma omp parallel for
     for (int i = 0; i < param_num; ++i) {
-        for (const auto& triplet : dKC_nonzeros[i]) {
-            d_loss_d_params[i] += y(triplet.row()) * triplet.value() * x(triplet.col());
+        for (const auto& triplet : dKC_nonzeros_[i]) {
+            d_loss_d_params[i] += y(triplet.row()) * triplet.value() * forward_result[triplet.col()];
         }
     }
+    return d_loss_d_params;
+}
+
+template<int dim>
+const std::vector<real> Scene<dim>::GetVelocityFieldFromForward(const std::vector<real>& forward_result) const {
+    const int var_num = shape_.node_num_prod() * dim;
+    return std::vector<real>(forward_result.data(), forward_result.data() + var_num);
 }
 
 template<int dim>
