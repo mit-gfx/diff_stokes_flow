@@ -1,5 +1,7 @@
 Code for the Siggraph Asia 2020 paper **Functional Optimization of Fluidic Devices with Differentiable Stokes Flow**.
 
+[![Travis CI Status](https://travis-ci.org/mit-gfx/diff_stokes_flow.svg?branch=master)](https://travis-ci.org/mit-gfx/diff_stokes_flow)
+
 ## System requirement
 - Ubuntu 18.04
 - (Mini)conda 4.7.12 or higher
