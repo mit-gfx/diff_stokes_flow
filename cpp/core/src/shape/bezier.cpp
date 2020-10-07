@@ -131,13 +131,21 @@ const Vector2r Bezier2d::GetBezierDerivative(const real t) const {
 
 const real Bezier3d::ComputeSignedDistanceAndGradients(const std::array<real, 3>& point,
     std::vector<real>& grad) const {
-    std::array<real, 2> sketch_point{ point[0], point[1] };
+    // (point + dir_ * t)[2] = 0.
+    // This is an approximation.
+    const real t = -point[2] / dir_(2);
+    std::array<real, 2> sketch_point{ point[0] + t * dir_(0), point[1] + t * dir_(1) };
     return sketch_->ComputeSignedDistanceAndGradients(sketch_point, grad);
 }
 
 void Bezier3d::InitializeCustomizedData() {
+    CheckError(param_num() == 11, "Inconsistent number of parameters.");
+    CheckError(params()[10] != 0, "Invalid extrusion direction.");
+
     sketch_ = std::make_shared<Bezier2d>();
     std::array<int, 2> sketch_cell_nums;
     for (int i = 0; i < 2; ++i) sketch_cell_nums[i] = cell_num(i);
-    sketch_->Initialize(sketch_cell_nums, Bezier3d::params());
+    const std::vector<real> sketch_params(params().data(), params().data() + 8);
+    sketch_->Initialize(sketch_cell_nums, sketch_params);
+    for (int i = 0; i < 3; ++i) dir_(i) = params()[8 + i];
 }

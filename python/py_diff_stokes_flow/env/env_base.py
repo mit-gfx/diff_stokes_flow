@@ -180,13 +180,14 @@ class EnvBase:
         # Initialize the Dirichlet boundary conditions.
         node_bnd_dict = {}
         for dof, val in self._node_boundary_info:
+            dof = [int(d) for d in dof]
             dof = scene.GetNodeDof(dof[:-1], dof[-1])
             node_bnd_dict[dof] = val
         node_bnd_dofs = []
         node_bnd_vals = []
         for dof, val in node_bnd_dict.items():
             dof = int(dof)
-            assert 0 <= dof < np.prod(self._node_nums)
+            assert 0 <= dof < np.prod(self._node_nums) * self._dim
             val = float(val)
             node_bnd_dofs.append(dof)
             node_bnd_vals.append(val)

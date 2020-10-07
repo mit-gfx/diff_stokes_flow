@@ -38,6 +38,7 @@ private:
     void InitializeCustomizedData() override;
 
     std::shared_ptr<Bezier2d> sketch_;
+    Vector3r dir_;
 };
 
 #endif

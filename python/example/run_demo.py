@@ -6,6 +6,7 @@ from importlib import import_module
 import scipy.optimize
 import time
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from py_diff_stokes_flow.common.common import print_info, print_ok, print_error, print_warning, ndarray
 from py_diff_stokes_flow.common.grad_check import check_gradients
@@ -14,6 +15,7 @@ from py_diff_stokes_flow.common.grad_check import check_gradients
 all_demo_names = {
     # ID: (module name, class name).
     'amplifier': ('amplifier_env_2d', 'AmplifierEnv2d'),
+    'flow_averager': ('flow_averager_env_3d', 'FlowAveragerEnv3d'),
 }
 
 if __name__ == '__main__':
@@ -29,7 +31,7 @@ if __name__ == '__main__':
     sample_num = 16
     solver = 'eigen'
     rel_tol = 1e-4
-    max_iter = 10
+    max_iter = 50
     enable_grad_check = True
 
     # Load class.
@@ -41,7 +43,8 @@ if __name__ == '__main__':
     losses = []
     best_sample = None
     best_loss = np.inf
-    for _ in range(sample_num):
+    print_info('Randomly sampling initial guesses...')
+    for _ in tqdm(range(sample_num)):
         x = env.sample()
         loss, _ = env.solve(x, False, { 'solver': solver }) 
         losses.append(loss)

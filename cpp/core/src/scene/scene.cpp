@@ -67,8 +67,16 @@ void Scene<dim>::InitializeDirichletBoundaryCondition(const std::vector<int>& do
     }
     for (int i = 0; i < shape_.node_num_prod() * dim; ++i) {
         if (free_dofs[i]) continue;
-        CheckError(dirichlet_conditions_.find(i) == dirichlet_conditions_.end()
-            || dirichlet_conditions_.at(i) == 0, "Inconsistent Dirichlet conditions.");
+        const bool consistency = dirichlet_conditions_.find(i) == dirichlet_conditions_.end()
+            || dirichlet_conditions_.at(i) == 0;
+        if (!consistency) {
+            std::cout << "Node " << i << " should have been a solid node but was given nonzero velocity." << std::endl;
+            const auto node_idx = GetIndex(i, shape_.node_nums());
+            std::cout << "Node coordinates:";
+            for (int i = 0; i < dim; ++i) std::cout << " " << node_idx[i];
+            std::cout << std::endl;
+            CheckError(false, "Inconsistent Dirichlet conditions.");
+        }
         dirichlet_conditions_[i] = 0;
     }
 }

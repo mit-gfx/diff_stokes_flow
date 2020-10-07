@@ -75,7 +75,7 @@ class AmplifierEnv2d(EnvBase):
         J[:, 1] *= cy
         J[:, 3] *= cy
         J[:, 4] *= cy
-        return params, J
+        return ndarray(params).copy(), ndarray(J).copy()
 
     def _loss_and_grad_on_velocity_field(self, u):
         u_field = self.reshape_velocity_field(u)
@@ -90,7 +90,7 @@ class AmplifierEnv2d(EnvBase):
                 grad[-1, j] += 2 * u_diff
         loss /= cnt
         grad /= cnt
-        return loss, grad.ravel()
+        return loss, ndarray(grad).ravel()
 
     def sample(self):
         return np.random.uniform(low=self.lower_bound(), high=self.upper_bound())
