@@ -128,3 +128,16 @@ const Vector2r Bezier2d::GetBezierDerivative(const real t) const {
     const Vector3r ts(1, t, t * t);
     return cAB_ * ts;
 }
+
+const real Bezier3d::ComputeSignedDistanceAndGradients(const std::array<real, 3>& point,
+    std::vector<real>& grad) const {
+    std::array<real, 2> sketch_point{ point[0], point[1] };
+    return sketch_->ComputeSignedDistanceAndGradients(sketch_point, grad);
+}
+
+void Bezier3d::InitializeCustomizedData() {
+    sketch_ = std::make_shared<Bezier2d>();
+    std::array<int, 2> sketch_cell_nums;
+    for (int i = 0; i < 2; ++i) sketch_cell_nums[i] = cell_num(i);
+    sketch_->Initialize(sketch_cell_nums, Bezier3d::params());
+}

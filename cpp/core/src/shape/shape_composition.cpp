@@ -18,7 +18,16 @@ void ShapeComposition<2>::AddParametricShape(const std::string& name, const int 
 
 template<>
 void ShapeComposition<3>::AddParametricShape(const std::string& name, const int param_num) {
-    // TODO.
+    if (name == "bezier") {
+        ParametricShapeInfo<3> info;
+        info.name = name;
+        info.shape = std::make_shared<Bezier3d>();
+        info.param_begin_idx = 0;
+        info.param_num = 8;
+        shape_info_.push_back(info);
+    } else {
+        PrintError("Unsupported shape name: " + name);
+    }
 }
 
 template<int dim>
