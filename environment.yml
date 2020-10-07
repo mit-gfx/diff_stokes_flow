@@ -1,10 +1,11 @@
 name: diff_stokes_flow
 channels:
+  - anaconda
   - defaults
 dependencies:
   - _libgcc_mutex=0.1=main
   - blas=1.0=openblas
-  - ca-certificates=2020.6.24=0
+  - ca-certificates=2020.7.22=0
   - certifi=2020.6.20=py38_0
   - cycler=0.10.0=py38_0
   - dbus=1.13.16=hb2f20db_0
@@ -38,7 +39,7 @@ dependencies:
   - numpy=1.19.1=py38h30dfecb_0
   - numpy-base=1.19.1=py38h75fe3a5_0
   - olefile=0.46=py_0
-  - openssl=1.1.1g=h7b6447c_0
+  - openssl=1.1.1h=h7b6447c_0
   - pcre=8.44=he6710b0_0
   - pillow=7.2.0=py38hb39fc2d_0
   - pip=20.2.2=py38_0
@@ -48,6 +49,7 @@ dependencies:
   - python-dateutil=2.8.1=py_0
   - qt=5.9.7=h5867ecd_1
   - readline=8.0=h7b6447c_0
+  - scipy=1.5.2=py38habc2bb6_0
   - setuptools=49.6.0=py38_0
   - sip=4.19.13=py38he6710b0_0
   - six=1.15.0=py_0

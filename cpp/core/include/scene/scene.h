@@ -27,6 +27,10 @@ public:
     const real GetSignedDistance(const std::array<int, dim>& node_idx) const;
     const std::vector<real> GetSignedDistanceGradients(const std::array<int, dim>& node_idx) const;
 
+    const bool IsSolidCell(const std::array<int, dim>& cell_idx) const;
+    const bool IsFluidCell(const std::array<int, dim>& cell_idx) const;
+    const bool IsMixedCell(const std::array<int, dim>& cell_idx) const;
+
 private:
     // Geometry information.
     ShapeComposition<dim> shape_;

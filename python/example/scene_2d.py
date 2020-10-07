@@ -13,7 +13,7 @@ def test_scene_2d(verbose):
     env = RandomEnv2d(seed)
 
     def loss_and_grad(x):
-        loss, grad, _ = env.solve(x, { 'solver': 'eigen' })
+        loss, grad, _ = env.solve(x, True, { 'solver': 'eigen' })
         return loss, grad
 
     x0 = env.sample()

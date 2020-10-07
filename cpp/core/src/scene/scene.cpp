@@ -324,5 +324,23 @@ const std::vector<real> Scene<dim>::GetSignedDistanceGradients(const std::array<
     return shape_.signed_distance_gradients(node_idx);
 }
 
+template<int dim>
+const bool Scene<dim>::IsSolidCell(const std::array<int, dim>& cell_idx) const {
+    const auto& cell = cells_.at(GetIndex(cell_idx, shape_.cell_nums()));
+    return cell.IsSolidCell();
+}
+
+template<int dim>
+const bool Scene<dim>::IsFluidCell(const std::array<int, dim>& cell_idx) const {
+    const auto& cell = cells_.at(GetIndex(cell_idx, shape_.cell_nums()));
+    return cell.IsFluidCell();
+}
+
+template<int dim>
+const bool Scene<dim>::IsMixedCell(const std::array<int, dim>& cell_idx) const {
+    const auto& cell = cells_.at(GetIndex(cell_idx, shape_.cell_nums()));
+    return cell.IsMixedCell();
+}
+
 template class Scene<2>;
 template class Scene<3>;
