@@ -1,3 +1,10 @@
+cd external/
+mkdir -p pbrt_build
+cd pbrt_build
+cmake ../pbrt-v3
+make -j4
+cd ../../
+
 # Generate python binding.
 cd cpp/core/src
 swig -c++ -python py_diff_stokes_flow_core.i

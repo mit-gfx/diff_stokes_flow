@@ -1,4 +1,4 @@
-Code for the Siggraph Asia 2020 paper **Functional Optimization of Fluidic Devices with Differentiable Stokes Flow**.
+Codebase for **Functional Optimization of Fluidic Devices with Differentiable Stokes Flow**
 
 [![Travis CI Status](https://travis-ci.org/mit-gfx/diff_stokes_flow.svg?branch=master)](https://travis-ci.org/mit-gfx/diff_stokes_flow)
 
@@ -42,17 +42,22 @@ liblapack-dev is already the newest version (3.7.1-4ubuntu1).
 ```
 
 ## Examples
+Navigate to the `python/example` folder before you run any of the following scripts.
+
+### Results in the paper
+Run `python run_demo.py [demo_name]` where `[demo_name]` can be any of the following;
+- `amplifier`: run the `Amplifier` demo (Fig. 2) in the paper.
+
+Run `python refinement.py` to generate Fig. 8 in the paper.
 
 ### Numerical tests
-Navigate to the `python/example` folder and run `python [script_name].py` where `[script_name]` can be any of the following:
+Run `python [script_name].py` where `[script_name]` can be any of the following:
 - `bezier_2d`: show the level-set of a Bezier curve and check the implementation of gradients.
 - `cell_2d`: check if all quantities in `Cell2d` are implemented correctly.
 - `scene_2d`: check the gradients of loss defined in a 2-dimensional scene.
 - `shape_composition_2d`: check the gradients of composing multiple primitive level-sets.
 Finally, if you would like to run all these numerical experiments above, you can simply call `run_all_tests`:
 - `run_all_tests`: this will sequentially run all the aforementioned numerical tests.
-- `refinement`: generate Fig. 8 in the paper.
 
-### Demos
-Navigate to the `python/example` folder and run `python run_demo.py [demo_name]` where `[demo_name]` can be any of the following;
-- `amplifier`: run the `Amplifier` demo (Fig. 2) in the paper.
+### Rendering
+Run `python pbrt_renderer_demo.py` to see how to use the Python wrapper of pbrt-v3.
