@@ -325,7 +325,8 @@ class EnvBase:
             'camera_lookat': (0, 0, 0),
         }
         renderer = PbrtRenderer(options)
-        renderer.add_tri_mesh(Path(root_path) / 'asset/mesh/curved_ground.obj',
+        renderer.add_tri_mesh(Path(root_path) / 'asset/mesh/plane.obj',
+            transforms=[('s', 1.5)],
             color=(.4, .4, .4), texture_img='background.png')
 
         # Render the solid-fluid interface.
