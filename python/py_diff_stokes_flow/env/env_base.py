@@ -83,7 +83,7 @@ class EnvBase:
 
         if folder is not None:
             folder = Path(folder)
-            create_folder(folder, exist_ok=False)
+            create_folder(folder, exist_ok=True)
 
         # Create data members.
         self._cell_nums = np.copy(cell_nums)

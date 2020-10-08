@@ -7,6 +7,8 @@ import scipy.optimize
 import time
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import pickle
+import os
 
 from py_diff_stokes_flow.common.common import print_info, print_ok, print_error, print_warning, ndarray
 from py_diff_stokes_flow.common.grad_check import check_gradients
@@ -82,21 +84,38 @@ if __name__ == '__main__':
             print_error('Gradient check failed.')
             sys.exit(0)
 
+    # File index + 1 = len(opt_history).
     loss, grad = loss_and_grad(x_init)
     opt_history = [(x_init.copy(), loss, grad.copy())]
+    pickle.dump(opt_history, open('{}/{:04d}.data'.format(demo_name, 0), 'wb'))
     def callback(x):
         loss, grad = loss_and_grad(x)
         global opt_history
-        print_info('Summary of iteration {:4d}'.format(len(opt_history)))
+        cnt = len(opt_history)
+        print_info('Summary of iteration {:4d}'.format(cnt))
         opt_history.append((x.copy(), loss, grad.copy()))
         print_info('loss: {:3.6e}, |grad|: {:3.6e}, |x|: {:3.6e}'.format(
             loss, np.linalg.norm(grad), np.linalg.norm(x)))
+        # Save data to the folder.
+        pickle.dump(opt_history, open('{}/{:04d}.data'.format(demo_name, cnt), 'wb'))
 
     results = scipy.optimize.minimize(loss_and_grad, x_init.copy(), method='L-BFGS-B', jac=True, bounds=bounds,
         callback=callback, options={ 'ftol': rel_tol, 'maxiter': max_iter})
     if not results.success:
         print_warning('Local optimization fails to reach the optimal condition and will return the last solution.')
-    x_final = results.x
+    print_info('Data saved to {}/{:04d}.data.'.format(demo_name, len(opt_history) - 1))
+
+    # Load results from demo_name.
+    cnt = 0
+    while True:
+        data_file_name = '{}/{:04d}.data'.format(demo_name, cnt)
+        if not os.path.exists(data_file_name):
+            cnt -= 1
+            break
+        cnt += 1
+    data_file_name = '{}/{:04d}.data'.format(demo_name, cnt)
+    print_info('Loading data from {}.'.format(data_file_name))
+    opt_history = pickle.load(open(data_file_name, 'rb'))
 
     # Plot the optimization progress.
     plt.rc('pdf', fonttype=42)
@@ -129,8 +148,11 @@ if __name__ == '__main__':
 
     # Render the results.
     print_info('Rendering optimization history in {}/'.format(demo_name))
+    # 000k.png renders opt_history[k], which is also the last element in 000k.data.
     for k, (xk, _, _) in enumerate(opt_history):
         env.render(xk, '{:04d}.png'.format(k), { 'solver': solver, 'spp': spp })
         print_info('{}/{:04d}.png is ready.'.format(demo_name, k))
-    export_gif(demo_name, '{}.gif'.format(demo_name), fps=1)
+
+    # Showing 5 iterations per second seems good.
+    export_gif(demo_name, '{}.gif'.format(demo_name), fps=5)
     print_info('Video {}.gif is ready.'.format(demo_name))
