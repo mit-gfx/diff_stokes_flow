@@ -320,7 +320,7 @@ class EnvBase:
             'light_map': 'uffizi-large.exr',
             'light_map_scale': 0.75,
             'sample': options['spp'],
-            'max_depth': 4,
+            'max_depth': 2,
             'camera_pos': (0.1, -0.65, 1.1),
             'camera_lookat': (0, 0, 0),
         }
