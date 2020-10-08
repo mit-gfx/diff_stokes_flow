@@ -321,12 +321,12 @@ class EnvBase:
             'light_map_scale': 0.75,
             'sample': options['spp'],
             'max_depth': 4,
-            'camera_pos': (0, -0.4, 1.3),
+            'camera_pos': (0.1, -0.65, 1.1),
             'camera_lookat': (0, 0, 0),
         }
         renderer = PbrtRenderer(options)
         renderer.add_tri_mesh(Path(root_path) / 'asset/mesh/curved_ground.obj',
-            color=(.4, .4, .4))
+            color=(.4, .4, .4), texture_img='background.png')
 
         # Render the solid-fluid interface.
         cx, cy, cz = self._cell_nums
@@ -386,8 +386,8 @@ class EnvBase:
                     lines.append((v_begin, v_end))
         # Scale the line lengths so that the maximum length is 1/10 of the longest axis.
         lines_scale = 0.1 * np.max(self._cell_nums) / max_u_len
-        # width is 5/1000 of the longest axis.
-        width = 0.005 * np.max(self._cell_nums)
+        # width is 1/10 of the cell size.
+        width = 0.1
         for v_begin, v_end in lines:
             # Compute the color.
             color_idx = float(np.linalg.norm(v_end - v_begin) / max_u_len)

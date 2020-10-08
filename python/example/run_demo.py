@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from py_diff_stokes_flow.common.common import print_info, print_ok, print_error, print_warning, ndarray
 from py_diff_stokes_flow.common.grad_check import check_gradients
+from py_diff_stokes_flow.common.display import export_gif
 
 # Update this dictionary if you would like to add new demos.
 all_demo_names = {
@@ -131,3 +132,5 @@ if __name__ == '__main__':
     for k, (xk, _, _) in enumerate(opt_history):
         env.render(xk, '{:04d}.png'.format(k), { 'solver': solver, 'spp': spp })
         print_info('{}/{:04d}.png is ready.'.format(demo_name, k))
+    export_gif(demo_name, '{}.gif'.format(demo_name), fps=1)
+    print_info('Video {}.gif is ready.'.format(demo_name))
