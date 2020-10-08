@@ -63,6 +63,10 @@ class PbrtRenderer(object):
         lightmap = Path(root_path) / 'asset/texture/{}'.format(lightmap)
         self.__lightmap = lightmap
 
+        lightmap_scale = options['light_map_scale'] if 'light_map_scale' in options else 1.0
+        lightmap_scale = float(lightmap_scale)
+        self.__lightmap_scale = lightmap_scale
+
         # A list of objects.
         self.__tri_objects = []
         self.__shape_objects = []
@@ -251,7 +255,8 @@ class PbrtRenderer(object):
 
             f.write('\n')
             f.write('AttributeBegin\n')
-            f.write('LightSource "infinite" "string mapname" "{}" "color scale" [1, 1, 1]\n'.format(str(self.__lightmap)))
+            f.write('LightSource "infinite" "string mapname" "{}" "color scale" [{:f}, {:f}, {:f}]\n'.format(
+                str(self.__lightmap), self.__lightmap_scale, self.__lightmap_scale, self.__lightmap_scale))
             f.write('AttributeEnd\n')
 
             f.write('\n')

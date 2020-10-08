@@ -32,7 +32,8 @@ if __name__ == '__main__':
     solver = 'eigen'
     rel_tol = 1e-4
     max_iter = 50
-    enable_grad_check = True
+    enable_grad_check = False
+    spp = 64
 
     # Load class.
     module_name, env_name = all_demo_names[demo_name]
@@ -128,5 +129,5 @@ if __name__ == '__main__':
     # Render the results.
     print_info('Rendering optimization history in {}/'.format(demo_name))
     for k, (xk, _, _) in enumerate(opt_history):
-        env.render(xk, '{:04d}.png'.format(k), { 'solver': solver })
+        env.render(xk, '{:04d}.png'.format(k), { 'solver': solver, 'spp': spp })
         print_info('{}/{:04d}.png is ready.'.format(demo_name, k))

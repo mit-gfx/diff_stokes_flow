@@ -3,9 +3,12 @@ import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib import collections as mc
+from skimage import measure
 
 from py_diff_stokes_flow.core.py_diff_stokes_flow_core import StdRealVector, Scene2d, Scene3d
 from py_diff_stokes_flow.common.common import ndarray, create_folder, print_warning
+from py_diff_stokes_flow.common.renderer import PbrtRenderer
+from py_diff_stokes_flow.common.project_path import root_path
 
 # For each derived class, it only needs to initialize three data members in __init__ and overlead the loss and grad
 # function _loss_and_grad_on_velocity_field. A typical derived may look like this:
@@ -223,7 +226,7 @@ class EnvBase:
         if self._dim == 2:
             self._render_2d(xk, img_name, options)
         else:
-            self._render_3d(xk, image_name, options)
+            self._render_3d(xk, img_name, options)
 
     def _render_2d(self, xk, img_name, options):
         assert self._folder
@@ -245,14 +248,14 @@ class EnvBase:
         lines = []
         colors = []
         shift = 0.05
-        fludic_node = np.ones((cx + 1, cy + 1))
+        fluidic_node = np.ones((cx + 1, cy + 1))
         for i in range(cx):
             for j in range(cy):
                 if scene.IsFluidCell((i, j)):
                     color = 'tab:blue'
                 elif scene.IsSolidCell((i, j)):
                     color = 'tab:orange'
-                    fludic_node[i, j] = fludic_node[i + 1, j] = fludic_node[i, j + 1] = fludic_node[i + 1, j + 1] = 0
+                    fluidic_node[i, j] = fluidic_node[i + 1, j] = fluidic_node[i, j + 1] = fluidic_node[i + 1, j + 1] = 0
                 else:
                     color = 'tab:cyan'
                 pts = [(i + shift, j + shift),
@@ -273,7 +276,7 @@ class EnvBase:
         lines = []
         for i in range(cx + 1):
             for j in range(cy + 1):
-                if not fludic_node[i, j]: continue
+                if not fluidic_node[i, j]: continue
                 v_begin = ndarray([i, j])
                 v_end = v_begin + u_field[i, j]
                 lines.append((v_begin, v_end))
@@ -309,7 +312,99 @@ class EnvBase:
         _, info = self.solve(xk, False, options)
         scene = info['scene']
         u_field = info['velocity_field']
-        # TODO.
+
+        # A proper range for placing the scene is [-0.4, 0.4] x [-0.3, 0.3] x [0, 0.6].
+        options = {
+            'file_name': str(self._folder / img_name),
+            'resolution': (1024, 768),
+            'light_map': 'uffizi-large.exr',
+            'light_map_scale': 0.75,
+            'sample': options['spp'],
+            'max_depth': 4,
+            'camera_pos': (0, -0.4, 1.3),
+            'camera_lookat': (0, 0, 0),
+        }
+        renderer = PbrtRenderer(options)
+        renderer.add_tri_mesh(Path(root_path) / 'asset/mesh/curved_ground.obj',
+            color=(.4, .4, .4))
+
+        # Render the solid-fluid interface.
+        cx, cy, cz = self._cell_nums
+        nx, ny, nz = self._node_nums
+        # How to use cmap:
+        # cmap(0.0) to cmap(1.0) covers the whole range of the colormap.
+        cmap = plt.get_cmap('jet')
+        scale = np.min([0.8 / cx, 0.6 / cy, 0.6 / cz])
+        transforms=[
+            ('t', (-cx / 2, -cy / 2, 0)),
+            ('s', scale)
+        ]
+        # Assemble an obj mesh.
+        image_prefix = '.'.join(img_name.split('.')[:-1])
+        interface_file_name = self._folder / '{}.obj'.format(image_prefix)
+        sdf = np.zeros((nx, ny, nz))
+        for i in range(nx):
+            for j in range(ny):
+                for k in range(nz):
+                    sdf[i, j, k] = scene.GetSignedDistance((i, j, k))
+        sdf = ndarray(sdf)
+        verts, faces, _, _ = measure.marching_cubes_lewiner(sdf, 0)
+        verts = ndarray(verts)
+        faces = ndarray(faces).astype(np.int32) + 1
+
+        # Write obj files.
+        with open(interface_file_name, 'w') as f:
+            for v in verts:
+                f.write('v {:6f} {:6f} {:6f}\n'.format(*v))
+            for fi in faces:
+                f.write('f {:d} {:d} {:d}\n'.format(*fi))
+
+        renderer.add_tri_mesh(interface_file_name, transforms=transforms,
+            color=(1.0, 0.61, 0.0))
+
+        # Render the velocity field.
+        fluidic_node = np.ones((nx, ny, nz))
+        for i in range(cx):
+            for j in range(cy):
+                for k in range(cz):
+                    if scene.IsSolidCell((i, j, k)):
+                        fluidic_node[i, j, k] = fluidic_node[i, j, k + 1] \
+                        = fluidic_node[i, j + 1, k] = fluidic_node[i, j + 1, k + 1] \
+                        = fluidic_node[i + 1, j, k] = fluidic_node[i + 1, j, k + 1] \
+                        = fluidic_node[i + 1, j + 1, k] = fluidic_node[i + 1, j + 1, k + 1] = 0
+        lines = []
+        max_u_len = -np.inf
+        for i in range(nx):
+            for j in range(ny):
+                for k in range(nz):
+                    if not fluidic_node[i, j, k]: continue
+                    v_begin = ndarray([i, j, k])
+                    v_end = v_begin + u_field[i, j, k]
+                    u_len = np.linalg.norm(u_field[i, j, k])
+                    if u_len > max_u_len:
+                        max_u_len = u_len
+                    lines.append((v_begin, v_end))
+        # Scale the line lengths so that the maximum length is 1/10 of the longest axis.
+        lines_scale = 0.1 * np.max(self._cell_nums) / max_u_len
+        # width is 5/1000 of the longest axis.
+        width = 0.005 * np.max(self._cell_nums)
+        for v_begin, v_end in lines:
+            # Compute the color.
+            color_idx = float(np.linalg.norm(v_end - v_begin) / max_u_len)
+            color = ndarray(cmap(color_idx))[:3]
+            v0 = v_begin
+            v3 = (v_end - v_begin) * lines_scale + v_begin
+            v1 = (2 * v0 + v3) / 3
+            v2 = (v0 + 2 * v3) / 3
+            renderer.add_shape_mesh({
+                    'name': 'curve',
+                    'point': ndarray([v0, v1, v2, v3]),
+                    'width': width
+                },
+                color=color,
+                transforms=transforms
+            )
+        renderer.render(verbose=True)
 
     def parameter_dim(self):
         return np.sum([v for _, v in self._parametric_shape_info])
