@@ -87,8 +87,8 @@ if __name__ == '__main__':
     def callback(x):
         loss, grad = loss_and_grad(x)
         global opt_history
-        opt_history.append((x.copy(), loss, grad.copy()))
         print_info('Summary of iteration {:4d}'.format(len(opt_history)))
+        opt_history.append((x.copy(), loss, grad.copy()))
         print_info('loss: {:3.6e}, |grad|: {:3.6e}, |x|: {:3.6e}'.format(
             loss, np.linalg.norm(grad), np.linalg.norm(x)))
 

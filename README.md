@@ -48,6 +48,7 @@ Navigate to the `python/example` folder before you run any of the following scri
 Run `python run_demo.py [demo_name]` where `[demo_name]` can be any of the following;
 - `amplifier`: run the `Amplifier` demo (Fig. 2) in the paper.
 - `flow_averager`: run the `Flow Averager` demo (Fig. 4) in the paper.
+![flow_averager](asset/video/flow_averager.gif)
 
 Run `python refinement.py` to generate Fig. 8 in the paper.
 
