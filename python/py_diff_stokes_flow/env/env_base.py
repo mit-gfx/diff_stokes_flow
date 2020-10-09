@@ -316,7 +316,14 @@ class EnvBase:
                 for k in range(vs_len):
                     lines.append((vs[k], vs[(k + 1) % vs_len]))
         ax.add_collection(mc.LineCollection(lines, colors='tab:olive', linestyle='-'))
+
+        # Plot other customized data if needed.
+        self._render_customized_2d(scene, ax)
+
         fig.savefig(self._folder / img_name)
+
+    def _render_customized_2d(self, scene, ax):
+        pass
 
     def _render_3d(self, xk, img_name, options):
         assert self._folder

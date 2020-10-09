@@ -268,6 +268,11 @@ const std::vector<real> Scene<dim>::Forward(const std::string& qp_solver_name) {
     const real abs_error_x = (KC_ * x - d_ext).norm();
     CheckError(abs_error_x <= d_ext.norm() * rel_tol + abs_tol, "QP solver fails to solve d_ext.");
 
+    // Solve -K * u, or equivalently, -KC * [u, 0].
+    VectorXr u0 = x;
+    u0.tail(C_row_num) = VectorXr::Zero(C_row_num);
+    fluidic_force_density_ = ToStdVector(-(KC_ * u0).head(var_num));
+
     // Return the solution.
     return ToStdVector(x);
 }
@@ -331,6 +336,14 @@ const real Scene<dim>::GetSignedDistance(const std::array<int, dim>& node_idx) c
 template<int dim>
 const std::vector<real> Scene<dim>::GetSignedDistanceGradients(const std::array<int, dim>& node_idx) const {
     return shape_.signed_distance_gradients(node_idx);
+}
+
+template<int dim>
+const std::array<real, dim> Scene<dim>::GetFluidicForceDensity(const std::array<int, dim>& node_idx) const {
+    const int node_dof = GetIndex(node_idx, shape_.node_nums());
+    std::array<real, dim> force;
+    for (int i = 0; i < dim; ++i) force[i] = fluidic_force_density_[node_dof * dim + i];
+    return force;
 }
 
 template<int dim>
