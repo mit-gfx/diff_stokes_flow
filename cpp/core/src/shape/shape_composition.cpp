@@ -1,6 +1,7 @@
 #include "shape/shape_composition.h"
 #include "common/common.h"
 #include "shape/bezier.h"
+#include "shape/plane.h"
 
 template<>
 void ShapeComposition<2>::AddParametricShape(const std::string& name, const int param_num) {
@@ -10,6 +11,13 @@ void ShapeComposition<2>::AddParametricShape(const std::string& name, const int 
         info.shape = std::make_shared<Bezier2d>();
         info.param_begin_idx = 0;
         info.param_num = 8;
+        shape_info_.push_back(info);
+    } else if (name == "plane") {
+        ParametricShapeInfo<2> info;
+        info.name = name;
+        info.shape = std::make_shared<Plane<2>>();
+        info.param_begin_idx = 0;
+        info.param_num = 3;
         shape_info_.push_back(info);
     } else {
         PrintError("Unsupported shape name: " + name);
@@ -24,6 +32,13 @@ void ShapeComposition<3>::AddParametricShape(const std::string& name, const int 
         info.shape = std::make_shared<Bezier3d>();
         info.param_begin_idx = 0;
         info.param_num = 11;
+        shape_info_.push_back(info);
+    } else if (name == "plane") {
+        ParametricShapeInfo<3> info;
+        info.name = name;
+        info.shape = std::make_shared<Plane<3>>();
+        info.param_begin_idx = 0;
+        info.param_num = 4;
         shape_info_.push_back(info);
     } else {
         PrintError("Unsupported shape name: " + name);
