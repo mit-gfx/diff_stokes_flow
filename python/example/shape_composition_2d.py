@@ -52,12 +52,10 @@ def test_shape_composition_2d(verbose):
     shape.Initialize(cell_nums, params)
     sdf = ndarray(shape.signed_distances())
     sdf_master = np.load(folder / 'sdf_master.npy')
-    '''
     if np.max(np.abs(sdf - sdf_master)) > 0:
         if verbose:
             print_error('Incorrect signed distance function.')
         return False
-    '''
 
     if verbose:
         visualize_level_set(shape)
