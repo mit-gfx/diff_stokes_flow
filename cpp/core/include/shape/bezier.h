@@ -16,6 +16,7 @@ private:
     const Vector2r GetBezierPoint(const real t) const;
     const Vector2r GetBezierDerivative(const real t) const;
 
+    Eigen::Matrix<real, 2, 4> control_points_;
     Matrix4r A_;
     Eigen::Matrix<real, 4, 3> B_;
     Eigen::Matrix<real, 2, 4> cA_;

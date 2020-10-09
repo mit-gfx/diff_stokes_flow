@@ -12,8 +12,7 @@ void Bezier2d::InitializeCustomizedData() {
     //      = (3t - 6t^2 + 3t^3) p1 +
     //      = (3t^2 - 3t^3) p2 +
     //      = t^3 p3.
-    const Eigen::Matrix<real, 2, 4> control_points = Eigen::Map<const Eigen::Matrix<real, 2, 4>>(
-        params().data(), 2, 4);
+    control_points_ = Eigen::Map<const Eigen::Matrix<real, 2, 4>>(params().data(), 2, 4);
     A_ << 1, -3, 3, -1,
         0, 3, -6, 3,
         0, 0, 3, -3,
@@ -22,8 +21,8 @@ void Bezier2d::InitializeCustomizedData() {
         1, 0, 0,
         0, 2, 0,
         0, 0, 3;
-    cA_ = control_points * A_;
-    cAB_ = control_points * A_ * B_;
+    cA_ = control_points_ * A_;
+    cAB_ = control_points_ * A_ * B_;
     // When solving for the minimal distance from a point to the bezier curve, we solve:
     // s'(t)^T * (s(t) - point) = 0.
     // [1, t, t^2] * B^T * A^T * control_points^T * control_points * A * [1, t, t^2, t^3] -
@@ -93,6 +92,11 @@ const real Bezier2d::ComputeSignedDistanceAndGradients(const std::array<real, 2>
 
     // Determine the sign.
     const Vector2r min_tangent = GetBezierDerivative(min_t);
+    if (min_tangent.norm() == 0) {
+        std::cout << "The Bezier curve is singular. Control points are probably duplicated." << std::endl;
+        std::cout << control_points_ << std::endl;
+        CheckError(false, "Singular Bezier curve.");
+    }
     const Vector2r q = min_proj - p;
     // Consider the sign of q x min_tangent: positive = interior.
     const real z = q.x() * min_tangent.y() - q.y() * min_tangent.x();

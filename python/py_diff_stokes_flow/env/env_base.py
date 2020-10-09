@@ -30,6 +30,9 @@ from py_diff_stokes_flow.common.project_path import root_path
 #         grad = ...
 #         return loss, grad
 #
+#     def _color_velocity(self, u):
+#         return 0.5
+#
 #     def sample(self):
 #         return np.random.uniform(self.lower_bound(), self.upper_bound())
 #
@@ -122,6 +125,14 @@ class EnvBase:
     # - loss: a scalar (float).
     # - grad: a 1D array that stores grad loss/grad u.
     def _loss_and_grad_on_velocity_field(self, u):
+        raise NotImplementedError
+
+    # This function is used by _render_3d to determine the color of the velocity field.
+    # Input:
+    # - u: a 3D array.
+    # Output:
+    # - intercept: a floating point number between 0 and 1.
+    def _color_velocity(self, u):
         raise NotImplementedError
 
     # Lower bounds, upper bounds, and initial configuration.
@@ -364,21 +375,12 @@ class EnvBase:
             color=(1.0, 0.61, 0.0))
 
         # Render the velocity field.
-        fluidic_node = np.ones((nx, ny, nz))
-        for i in range(cx):
-            for j in range(cy):
-                for k in range(cz):
-                    if scene.IsSolidCell((i, j, k)):
-                        fluidic_node[i, j, k] = fluidic_node[i, j, k + 1] \
-                        = fluidic_node[i, j + 1, k] = fluidic_node[i, j + 1, k + 1] \
-                        = fluidic_node[i + 1, j, k] = fluidic_node[i + 1, j, k + 1] \
-                        = fluidic_node[i + 1, j + 1, k] = fluidic_node[i + 1, j + 1, k + 1] = 0
         lines = []
         max_u_len = -np.inf
         for i in range(nx):
             for j in range(ny):
                 for k in range(nz):
-                    if not fluidic_node[i, j, k]: continue
+                    if scene.GetSignedDistance((i, j, k)) >= 0: continue
                     v_begin = ndarray([i, j, k])
                     v_end = v_begin + u_field[i, j, k]
                     u_len = np.linalg.norm(u_field[i, j, k])
@@ -391,7 +393,7 @@ class EnvBase:
         width = 0.1
         for v_begin, v_end in lines:
             # Compute the color.
-            color_idx = float(np.linalg.norm(v_end - v_begin) / max_u_len)
+            color_idx = self._color_velocity(v_end - v_begin)
             color = ndarray(cmap(color_idx))[:3]
             v0 = v_begin
             v3 = (v_end - v_begin) * lines_scale + v_begin
