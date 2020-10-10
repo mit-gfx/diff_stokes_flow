@@ -24,38 +24,18 @@ def visualize_level_set(ls):
     plt.show()
     plt.close()
 
-def test_shape_composition_2d(verbose):
+def test_shape_composition_2d(shape_info, verbose):
     np.random.seed(42)
-    folder = Path('shape_composition_2d')
 
     cell_nums = (32, 24)
-    control_points_lower = ndarray([
-        [32, 10],
-        [22, 10],
-        [12, 4],
-        [0, 4]
-    ])
-    control_points_upper = ndarray([
-        [0, 20],
-        [12, 20],
-        [22, 14],
-        [32, 14]
-    ])
-    plane_params = ndarray([1, 0, -16])
-
     shape = ShapeComposition2d()
-    shape.AddParametricShape('bezier', 8)
-    shape.AddParametricShape('bezier', 8)
-    shape.AddParametricShape('plane', 3)
-    params = np.concatenate([control_points_lower.ravel(), control_points_upper.ravel(), plane_params.ravel()])
+    params = []
+    for name, param in shape_info:
+        shape.AddParametricShape(name, param.size)
+        params.append(ndarray(param).ravel())
+    params = np.concatenate(params)
     params += np.random.normal(size=params.size) * 0.01
     shape.Initialize(cell_nums, params)
-    sdf = ndarray(shape.signed_distances())
-    sdf_master = np.load(folder / 'sdf_master.npy')
-    if np.max(np.abs(sdf - sdf_master)) > 0:
-        if verbose:
-            print_error('Incorrect signed distance function.')
-        return False
 
     if verbose:
         visualize_level_set(shape)
@@ -78,4 +58,37 @@ def test_shape_composition_2d(verbose):
 
 if __name__ == '__main__':
     verbose = True
-    test_shape_composition_2d(verbose)
+
+    test_shape_composition_2d([
+        ( 'bezier',
+            ndarray([
+                [32, 10],
+                [22, 10],
+                [12, 4],
+                [0, 4]
+            ])
+        ),
+        ( 'bezier',
+            ndarray([
+                [0, 20],
+                [12, 20],
+                [22, 14],
+                [32, 14]
+            ])
+        ),
+    ], verbose)
+
+    test_shape_composition_2d([
+        ( 'plane', ndarray([1, 0.1, -16]) ),
+        ( 'sphere', ndarray([16, 12, 8]) ),
+    ], verbose)
+
+    test_shape_composition_2d([
+        ( 'polar_bezier',
+            ndarray([
+                4, 8, 4, 8, 4, 8, 4, 8,
+                16, 12,
+                np.pi / 3
+            ])
+        ),
+    ], verbose)

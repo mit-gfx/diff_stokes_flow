@@ -82,11 +82,11 @@ class SuperpositionGateEnv3d(EnvBase):
         upper *= cx
 
         params = np.concatenate([lower_left.ravel(),
-            [-0.1, -0.1, 1],
+            [-0.01, -0.01, 1],
             right.ravel(),
-            [0.1, 0, 1],
+            [0.01, 0, 1],
             upper.ravel(),
-            [0, 0.1, 1],
+            [0, 0.01, 1],
         ])
 
         # Jacobian.
