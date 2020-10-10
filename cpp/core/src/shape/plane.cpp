@@ -7,7 +7,7 @@ const real Plane<dim>::ComputeSignedDistanceAndGradients(const std::array<real, 
     Eigen::Matrix<real, dim, 1> p;
     for (int i = 0; i < dim; ++i) p(i) = point[i];
     const real normal_len = normal_.norm();
-    const real eps = std::numeric_limits<real>::epsilon();
+    const real eps = Epsilon();
     CheckError(normal_len > eps, "Singular normal length from the plane equation.");
     const real f = p.dot(normal_) + offset_;
     const real g = normal_len;

@@ -223,7 +223,7 @@ void Cell<dim>::ComputeSampleAreaAndBoundaryArea(const int sample_idx, real& are
         }
         a_gradients += ai_gradients;
     }
-    const real eps = std::numeric_limits<real>::epsilon();
+    const real eps = Epsilon();
     CheckError(a > eps || a < -eps, "Singular case: boundaries are axis-aligned.");
     const real inv_a = 1 / a;
     const VectorXr inv_a_gradients = -a_gradients * inv_a * inv_a;
@@ -321,7 +321,7 @@ void Cell<dim>::ComputeDirichletVector(VectorXr& dirichlet_vector, MatrixXr& dir
     dirichlet_vector = VectorXr::Zero(corner_num_prod_);
     dirichlet_vector_gradients = MatrixXr::Zero(corner_num_prod_, corner_num_prod_);
     const real dx = ToReal(1) / edge_sample_num_;
-    const real eps = std::numeric_limits<real>::epsilon();
+    const real eps = Epsilon();
     for (int i = 0; i < sample_num_prod_; ++i) {
         const auto sample_idx = GetIndex(i, sample_nums_);
         Eigen::Matrix<real, dim, 1> sample;

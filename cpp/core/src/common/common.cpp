@@ -144,6 +144,10 @@ const real Pi() {
     return ToReal(3.1415926535897932384626);
 }
 
+const real Epsilon() {
+    return 10 * std::numeric_limits<real>::epsilon();
+}
+
 const std::vector<real> ToStdVector(const VectorXr& v) {
     return std::vector<real>(v.data(), v.data() + v.size());
 }

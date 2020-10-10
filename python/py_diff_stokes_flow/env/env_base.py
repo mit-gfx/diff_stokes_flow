@@ -321,6 +321,7 @@ class EnvBase:
         self._render_customized_2d(scene, ax)
 
         fig.savefig(self._folder / img_name)
+        plt.close()
 
     def _render_customized_2d(self, scene, ax):
         pass

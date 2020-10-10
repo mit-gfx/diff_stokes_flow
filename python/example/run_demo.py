@@ -30,14 +30,24 @@ if __name__ == '__main__':
     demo_name = sys.argv[1]
     assert demo_name in all_demo_names
 
-    # Hyperparameters.
-    seed = 42
-    sample_num = 16
-    solver = 'eigen'
-    rel_tol = 1e-4
-    max_iter = 50
-    enable_grad_check = False
-    spp = 64
+    # Hyperparameters which are loaded from the config file.
+    config_file_name = 'config/{}.txt'.format(demo_name)
+    config = {}
+    with open(config_file_name, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            key, val = line.strip().split(':')
+            key = key.strip()
+            val = val.strip()
+            config[key] = val
+    seed = int(config['seed'])
+    sample_num = int(config['sample_num'])
+    solver = config['solver']
+    rel_tol = float(config['rel_tol'])
+    max_iter = int(config['max_iter'])
+    enable_grad_check = config['enable_grad_check'] == 'True'
+    spp = int(config['spp'])
+    fps = int(config['fps'])
 
     # Load class.
     module_name, env_name = all_demo_names[demo_name]
@@ -45,6 +55,7 @@ if __name__ == '__main__':
     env = Env(seed, demo_name)
 
     # Global search: randomly sample initial guesses and pick the best.
+    samples = []
     losses = []
     best_sample = None
     best_loss = np.inf
@@ -53,14 +64,21 @@ if __name__ == '__main__':
         x = env.sample()
         loss, _ = env.solve(x, False, { 'solver': solver }) 
         losses.append(loss)
+        samples.append(ndarray(x).copy())
         if loss < best_loss:
             best_loss = loss
             best_sample = np.copy(x)
+    unit_loss = np.mean(losses)
+    pickle.dump((losses, samples, unit_loss, best_sample), open('{}/sample.data'.format(demo_name), 'wb'))
+    # Load from file.
+    losses, _, unit_loss, best_sample = pickle.load(open('{}/sample.data'.format(demo_name), 'rb'))
     print_info('Randomly sampled {:d} initial guesses.'.format(sample_num))
     print_info('Loss (min, max, mean): ({:4f}, {:4f}, {:4f}).'.format(
         np.min(losses), np.max(losses), np.mean(losses)
     ))
-    unit_loss = np.mean(losses)
+    print_info('Normalized loss (min, max, mean): ({:4f}, {:4f}, {:4f}).'.format(
+        np.min(losses) / unit_loss, np.max(losses) / unit_loss, 1
+    ))
 
     # Local optimization: run L-BFGS from best_sample.
     x_init = np.copy(best_sample)
@@ -120,15 +138,15 @@ if __name__ == '__main__':
 
     # Plot the optimization progress.
     plt.rc('pdf', fonttype=42)
-    plt.rc('font', size=22)
-    plt.rc('axes', titlesize=22)
-    plt.rc('axes', labelsize=22)
+    plt.rc('font', size=18)
+    plt.rc('axes', titlesize=18)
+    plt.rc('axes', labelsize=18)
 
-    fig = plt.figure(figsize=(18, 10))
+    fig = plt.figure(figsize=(18, 12))
     ax_loss = fig.add_subplot(121)
     ax_grad = fig.add_subplot(122)
 
-    ax_loss.set_position((0.07, 0.2, 0.39, 0.6))
+    ax_loss.set_position((0.12, 0.2, 0.33, 0.6))
     iterations = np.arange(len(opt_history))
     ax_loss.plot(iterations, [l for _, l, _ in opt_history], color='tab:red')
     ax_loss.set_xlabel('Iteration')
@@ -136,7 +154,7 @@ if __name__ == '__main__':
     ax_loss.set_yscale('log')
     ax_loss.grid(True, which='both')
 
-    ax_grad.set_position((0.54, 0.2, 0.39, 0.6))
+    ax_grad.set_position((0.55, 0.2, 0.33, 0.6))
     ax_grad.plot(iterations, [np.linalg.norm(g) + np.finfo(np.float).eps for _, _, g in opt_history],
         color='tab:green')
     ax_grad.set_xlabel('Iteration')
@@ -150,10 +168,17 @@ if __name__ == '__main__':
     # Render the results.
     print_info('Rendering optimization history in {}/'.format(demo_name))
     # 000k.png renders opt_history[k], which is also the last element in 000k.data.
-    for k, (xk, _, _) in enumerate(opt_history):
-        env.render(xk, '{:04d}.png'.format(k), { 'solver': solver, 'spp': spp })
-        print_info('{}/{:04d}.png is ready.'.format(demo_name, k))
+    cnt = len(opt_history)
+    for k in range(cnt - 1):
+        xk0, _, _ = opt_history[k]
+        xk1, _, _ = opt_history[k + 1]
+        for i in range(fps):
+            t = i / fps
+            xk = (1 - t) * xk0 + t * xk1
+            env.render(xk, '{:04d}.png'.format(k * fps + i), { 'solver': solver, 'spp': spp })
+            print_info('{}/{:04d}.png is ready.'.format(demo_name, k * fps + i))
+    env.render(opt_history[-1][0], '{:04d}.png'.format((cnt - 1) * fps), { 'solver': solver, 'spp': spp })
+    print_info('{}/{:04d}.png is ready.'.format(demo_name, (cnt - 1) * fps))
 
-    # Showing 5 iterations per second seems good.
-    export_gif(demo_name, '{}.gif'.format(demo_name), fps=5)
+    export_gif(demo_name, '{}.gif'.format(demo_name), fps=fps)
     print_info('Video {}.gif is ready.'.format(demo_name))

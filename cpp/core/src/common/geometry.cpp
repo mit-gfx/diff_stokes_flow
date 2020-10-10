@@ -130,9 +130,9 @@ void dSvd(const Matrix2r& F, const Matrix2r& U, const Vector2r& sig, const Matri
     Matrix2r& dU, Vector2r& dsig, Matrix2r& dV) {
     // https://j-towns.github.io/papers/svd-derivative.pdf.
     dsig = (U.transpose() * dF * V).diagonal();
-    const real eps = 10 * std::numeric_limits<real>::epsilon();
+    const real eps = Epsilon();
     // Ensure that sig is sorted.
-    CheckError(sig(0) >= sig(1), "SVD singular values should be sorted.");
+    CheckError(sig(0) >= sig(1) && sig(1) > eps, "SVD singular values should be sorted.");
     const Matrix2r S = sig.asDiagonal();
     const Matrix2r Ut = U.transpose();
     const Matrix2r dP = Ut * dF * V;
@@ -159,9 +159,9 @@ void dSvd(const Matrix2r& F, const Matrix2r& U, const Vector2r& sig, const Matri
 void dSvd(const Matrix3r& F, const Matrix3r& U, const Vector3r& sig, const Matrix3r& V, const Matrix3r& dF,
     Matrix3r& dU, Vector3r& dsig, Matrix3r& dV) {
     dsig = (U.transpose() * dF * V).diagonal();
-    const real eps = 10 * std::numeric_limits<real>::epsilon();
+    const real eps = Epsilon();
     // Ensure that sig is sorted.
-    CheckError(sig(0) >= sig(1) && sig(1) >= sig(2), "SVD singular values should be sorted.");
+    CheckError(sig(0) >= sig(1) && sig(1) >= sig(2) && sig(2) > eps, "SVD singular values should be sorted.");
     const Matrix3r S = sig.asDiagonal();
     const Matrix3r Ut = U.transpose();
     const Matrix3r dP = Ut * dF * V;

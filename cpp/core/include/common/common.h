@@ -36,6 +36,7 @@ const real Clip(const real val, const real min, const real max);
 const real ClipWithGradient(const real val, const real min, const real max, real& grad);
 
 const real Pi();
+const real Epsilon();
 
 // Eigen to std::vector.
 const std::vector<real> ToStdVector(const VectorXr& v);

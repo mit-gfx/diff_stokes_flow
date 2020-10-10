@@ -2,6 +2,7 @@
 #include "common/common.h"
 #include "shape/bezier.h"
 #include "shape/plane.h"
+#include "shape/sphere.h"
 
 template<>
 void ShapeComposition<2>::AddParametricShape(const std::string& name, const int param_num) {
@@ -19,6 +20,12 @@ void ShapeComposition<2>::AddParametricShape(const std::string& name, const int 
         info.param_begin_idx = 0;
         info.param_num = 3;
         shape_info_.push_back(info);
+    } else if (name == "sphere") {
+        ParametricShapeInfo<2> info;
+        info.name = name;
+        info.shape = std::make_shared<Sphere<2>>();
+        info.param_begin_idx = 0;
+        info.param_num = 3;
     } else {
         PrintError("Unsupported shape name: " + name);
     }
@@ -40,6 +47,12 @@ void ShapeComposition<3>::AddParametricShape(const std::string& name, const int 
         info.param_begin_idx = 0;
         info.param_num = 4;
         shape_info_.push_back(info);
+    } else if (name == "sphere") {
+        ParametricShapeInfo<3> info;
+        info.name = name;
+        info.shape = std::make_shared<Sphere<3>>();
+        info.param_begin_idx = 0;
+        info.param_num = 4;
     } else {
         PrintError("Unsupported shape name: " + name);
     }

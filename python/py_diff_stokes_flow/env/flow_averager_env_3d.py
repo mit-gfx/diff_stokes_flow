@@ -91,13 +91,13 @@ class FlowAveragerEnv3d(EnvBase):
         upper *= cxy
         left *= cxy
         params = np.concatenate([lower.ravel(),
-            [0, -0.1, 1],
+            [0, -0.01, 1],
             right.ravel(),
-            [0.1, 0, 1],
+            [0.01, 0, 1],
             upper.ravel(),
-            [0, 0.1, 1],
+            [0, 0.01, 1],
             left.ravel(),
-            [-0.1, 0, 1]
+            [-0.01, 0, 1]
         ])
 
         # Jacobian.
@@ -146,7 +146,7 @@ class FlowAveragerEnv3d(EnvBase):
         return np.random.uniform(low=self.lower_bound(), high=self.upper_bound())
 
     def lower_bound(self):
-        return ndarray([.0, .0, .5, .0, .5, .0, .0, .5])
+        return ndarray([.01, .01, .49, .01, .49, .01, .01, .01])
 
     def upper_bound(self):
-        return ndarray([.5, .5, 1., .5, 1., .5, .5, 1.])
+        return ndarray([.49, .49, .99, .49, .99, .49, .49, .49])

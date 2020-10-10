@@ -114,7 +114,7 @@ const real Bezier2d::ComputeSignedDistanceAndGradients(const std::array<real, 2>
         min_proj_gradients.col(i) = cA_gradients_[i] * min_ts;
     }
     // min_proj -> min_dist: min_dist = |min_proj - p|.
-    const real eps = std::numeric_limits<real>::epsilon();
+    const real eps = Epsilon();
     Vector2r q_unit = Vector2r::Zero();
     if (min_dist > eps) q_unit = q / min_dist;
     const Vector8r grad_vec(q_unit.transpose() * min_proj_gradients);
