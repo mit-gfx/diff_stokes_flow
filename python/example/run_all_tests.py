@@ -10,6 +10,7 @@ if __name__ == '__main__':
         # Parametric shapes.
         'bezier_2d',
         'shape_composition_2d',
+        'shape_composition_3d',
         'cell_2d',
         'scene_2d'
     ]

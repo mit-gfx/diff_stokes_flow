@@ -122,3 +122,115 @@ void PolarBezier2d::InitializeCustomizedData() {
         bezier_curves_[i]->Initialize(cell_nums(), bezier_params);
     }
 }
+
+PolarBezier3d::PolarBezier3d(const int z_level_num)
+    : z_level_num_(z_level_num) {
+    CheckError(z_level_num_ >= 2, "Inconsistent z_level_num.");
+}
+
+const real PolarBezier3d::ComputeSignedDistanceAndGradients(const std::array<real, 3>& point,
+    std::vector<real>& grad) const {
+    // Use z to determine the rho level.
+    std::vector<real> rho_single(2 * bezier_num_ + 3, 0);
+    const real z = point[2];
+    const real t0 = z / cell_nums()[2];
+    RowVectorXr t = RowVectorXr::Zero(z_level_num_);
+    t(0) = 1;
+    for (int j = 1; j < z_level_num_; ++j) t(j) = t(j - 1) * t0;
+    const VectorXr t_coeff(t * coeffs_);
+    for (int i = 0; i < 2 * bezier_num_; ++i) {
+        VectorXr p = VectorXr::Zero(z_level_num_);
+        for (int j = 0; j < z_level_num_; ++j) {
+            p(j) = rho_[j][i];
+        }
+        rho_single[i] = t_coeff.dot(p);
+    }
+    PolarBezier2d polar_bezier;
+    std::array<int, 2> xy_cell_nums{ cell_nums()[0], cell_nums()[1] };
+    rho_single[2 * bezier_num_] = center_.x();
+    rho_single[2 * bezier_num_ + 1] = center_.y();
+    rho_single[2 * bezier_num_ + 2] = angle_offset_;
+    polar_bezier.Initialize(xy_cell_nums, rho_single);
+
+    std::array<real, 2> xy_point{ point[0], point[1] };
+    std::vector<real> xy_grad;
+    const real dist = polar_bezier.ComputeSignedDistanceAndGradients(xy_point, xy_grad);
+
+    // Compute gradients.
+    grad.clear();
+    grad.resize(param_num(), 0);
+    for (int i = 0; i < z_level_num_; ++i)
+        for (int j = 0; j < 2 * bezier_num_; ++j) {
+            grad[i * 2 * bezier_num_ + j] += xy_grad[j] * t_coeff(i);
+        }
+    for (int i = 0; i < 3; ++i)
+        grad[z_level_num_ * 2 * bezier_num_ + i] += xy_grad[2 * bezier_num_ + i];
+
+    return dist;
+}
+
+void PolarBezier3d::InitializeCustomizedData() {
+    // - rho: 2 * bezier_num_ * z_level_num.
+    // - cx, cy.
+    // - angle_offset.
+    // bezier_num_ * 2 * z_level_num + 2 + 1 == param_num().
+    bezier_num_ = (param_num() - 3) / (2 * z_level_num_);
+    CheckError(bezier_num_ * 2 * z_level_num_ + 3 == param_num(), "Inconsistent param_num.");
+
+    rho_.clear();
+    rho_.resize(z_level_num_);
+    for (int z = 0; z < z_level_num_; ++z) {
+        rho_[z].clear();
+        rho_[z].resize(bezier_num_ * 2);
+        for (int k = 0; k < bezier_num_ * 2; ++k)
+            rho_[z][k] = params()[z * 2 * bezier_num_ + k];
+    }
+    center_ = Vector2r(params()[bezier_num_ * 2 * z_level_num_], params()[bezier_num_ * 2 * z_level_num_ + 1]);
+    angle_offset_ = params()[bezier_num_ * 2 * z_level_num_ + 2];
+    angle_step_size_ = Pi() * 2 / (bezier_num_ * 3);
+    dz_ = ToReal(cell_nums()[2]) / (z_level_num_ - 1);
+
+    // Derived data.
+    // coeffs_ are used for interpolating curves vertically.
+    coeffs_ = MatrixXr::Zero(z_level_num_, z_level_num_);
+    const int m = z_level_num_ - 1;
+    // p(t) = (1 - t)^m p0 + ... + t^m p_m.
+    //      = \sum C_{m, k} (1 - t)^{m-k}t^k p_k.    k = 0, 1, 2, ..., m.
+    int cmk = 1;
+    // Fill in the first column: (1 - t)^m p_0.
+    for (int i = 0; i < m + 1; ++i) {
+        coeffs_(i, 0) = cmk;
+        cmk *= -(m - i);
+        cmk /= (i + 1);
+        // i = 0 => cmk = -m;
+        // i = 1 => cmk = m * (m - 1) / 2.
+        // i = 2 => cmk = -m * (m - 1) * (m - 2) / (3 * 2).
+    }
+    cmk = m;
+    for (int k = 1; k < m + 1; ++k) {
+        // Contribution of p_k --- This is column k of coeffs_.
+        // cmk * (1 - t)^(m - k)t^k.
+        int cmj = 1;
+        for (int j = 0; j < m - k + 1; ++j) {
+            coeffs_(j + k, k) = cmk * cmj;
+            cmj *= -(m - k - j);
+            cmj /= (j + 1);
+        }
+        // Expand C_{m, k} (1 - t)^{m - k}t^k.
+        cmk = cmk * (m - k) / (k + 1);
+    }
+    // For sanity check:
+    // num_z_level_ = 2:
+    // p(t) = (1 - t)p0 + tp1.
+    //      = (1, t) * (p0, p1 - p0).
+    //      = (1, t) * [1, 0; -1, 1] * [p0, p1].
+    // num_z_level_ = 3:
+    // p(t) = (1 - t)^2p0 + 2(1 - t)tp1 + t^2p2.
+    //      = (1, -2t, t^2)p0 + (2t, -2t^2)p1 + t^2p2.
+    //      = (1, t, t^2) * (p0, -2p0 + 2p1, p0 - 2p1 + p2).
+    //      = (1, t, t^2) * [1, 0, 0; -2, 2, 0; 1, -2, 1] * [p0, p1, p2].
+    // num_z_level_ = 4:
+    // p(t) = (1 - t)^3p0 + 3 (1-t)^2 tp1 + 3(1-t)t^2p2 + t^3p3.
+    //      = (1 - 3t + 3t^2 - t^3) p0 + 3(t - 2t^2 + t^3) p1 + (3t^2 - 3t^3) p2 + t^3 p3.
+    //      = (1, t, t^2, t^3) * [p0, -3p0 + 3p1; 3p0 - 6p1 + 3p2; -p0 + 3p1 - 3p2 + p3].
+}

@@ -59,7 +59,7 @@ Run `python [script_name].py` where `[script_name]` can be any of the following:
 - `bezier_2d`: show the level-set of a Bezier curve and check the implementation of gradients.
 - `cell_2d`: check if all quantities in `Cell2d` are implemented correctly.
 - `scene_2d`: check the gradients of loss defined in a 2-dimensional scene.
-- `shape_composition_2d`: check the gradients of composing multiple primitive level-sets.
+- `shape_composition_2d` and `shape_composition_3d`: check the gradients of composing multiple primitive level-sets.
 Finally, if you would like to run all these numerical experiments above, you can simply call `run_all_tests`:
 - `run_all_tests`: this will sequentially run all the aforementioned numerical tests.
 

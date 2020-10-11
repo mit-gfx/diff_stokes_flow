@@ -31,4 +31,34 @@ private:
     std::vector<std::shared_ptr<Bezier2d>> bezier_curves_;
 };
 
+// This class assumes a few PolarBezier2d defined on planes parallel to the xy plane.
+// All PolarBezier2ds have aligned center and angle offset.
+// The parameters are assumed to be organized as follows:
+// - rho: 2 * bezier_num_ * z_level_num.
+// - cx, cy.
+// - angle_offset.
+class PolarBezier3d : public ParametricShape<3> {
+public:
+    PolarBezier3d(const int z_level_num);
+
+    const real ComputeSignedDistanceAndGradients(const std::array<real, 3>& point,
+        std::vector<real>& grad) const override;
+
+private:
+    void InitializeCustomizedData() override;
+
+    int bezier_num_;
+    std::vector<std::vector<real>> rho_;
+    Vector2r center_;
+    real angle_offset_;
+    real angle_step_size_;
+
+    int z_level_num_;
+    real dz_;
+
+    // Derived data.
+    // coeffs_ are used for interpolating curves vertically.
+    MatrixXr coeffs_;
+};
+
 #endif

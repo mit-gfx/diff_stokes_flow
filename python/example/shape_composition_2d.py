@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-from py_diff_stokes_flow.core.py_diff_stokes_flow_core import ShapeComposition2d, StdIntArray2d, StdRealVector
+from py_diff_stokes_flow.core.py_diff_stokes_flow_core import ShapeComposition2d, StdIntArray2d
 from py_diff_stokes_flow.common.common import ndarray, create_folder, print_error
 
 def visualize_level_set(ls):
@@ -24,7 +24,47 @@ def visualize_level_set(ls):
     plt.show()
     plt.close()
 
-def test_shape_composition_2d(shape_info, verbose):
+def test_shape_composition_2d(verbose):
+    flag = test_shape_composition_2d_single([
+        ( 'bezier',
+            ndarray([
+                [32, 10],
+                [22, 10],
+                [12, 4],
+                [0, 4]
+            ])
+        ),
+        ( 'bezier',
+            ndarray([
+                [0, 20],
+                [12, 20],
+                [22, 14],
+                [32, 14]
+            ])
+        ),
+    ], verbose)
+    if not flag: return False
+
+    flag = test_shape_composition_2d_single([
+        ( 'plane', ndarray([1, 0.1, -16]) ),
+        ( 'sphere', ndarray([16, 12, 8]) ),
+    ], verbose)
+    if not flag: return False
+
+    flag = test_shape_composition_2d_single([
+        ( 'polar_bezier',
+            ndarray([
+                4, 8, 4, 8, 4, 8, 4, 8,
+                16, 12,
+                np.pi / 3
+            ])
+        ),
+    ], verbose)
+    if not flag: return False
+
+    return True
+
+def test_shape_composition_2d_single(shape_info, verbose):
     np.random.seed(42)
 
     cell_nums = (32, 24)
@@ -58,37 +98,4 @@ def test_shape_composition_2d(shape_info, verbose):
 
 if __name__ == '__main__':
     verbose = True
-
-    test_shape_composition_2d([
-        ( 'bezier',
-            ndarray([
-                [32, 10],
-                [22, 10],
-                [12, 4],
-                [0, 4]
-            ])
-        ),
-        ( 'bezier',
-            ndarray([
-                [0, 20],
-                [12, 20],
-                [22, 14],
-                [32, 14]
-            ])
-        ),
-    ], verbose)
-
-    test_shape_composition_2d([
-        ( 'plane', ndarray([1, 0.1, -16]) ),
-        ( 'sphere', ndarray([16, 12, 8]) ),
-    ], verbose)
-
-    test_shape_composition_2d([
-        ( 'polar_bezier',
-            ndarray([
-                4, 8, 4, 8, 4, 8, 4, 8,
-                16, 12,
-                np.pi / 3
-            ])
-        ),
-    ], verbose)
+    test_shape_composition_2d(verbose)
