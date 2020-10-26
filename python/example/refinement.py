@@ -38,6 +38,9 @@ plt.rc('xtick', labelsize=18)
 plt.rc('ytick', labelsize=18)
 plt.rc('legend', fontsize=20)
 plt.rc('figure', titlesize=20)
+face_color = ndarray([247 / 255, 247 / 255, 247 / 255])
+plt.rcParams['figure.facecolor'] = face_color
+plt.rcParams['axes.facecolor'] = face_color
 
 def plot_velocity_field(ax, u_field, s, u_max):
     x_size = ndarray(np.arange(u_field.shape[0])) / s
@@ -97,4 +100,5 @@ ax_error.set_ylabel('relative error (%)')
 ax_error.grid(True)
 
 fig.savefig('refinement.pdf')
+fig.savefig('refinement.png')
 plt.show()
