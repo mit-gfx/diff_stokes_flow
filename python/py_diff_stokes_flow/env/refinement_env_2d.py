@@ -5,7 +5,7 @@ from py_diff_stokes_flow.common.common import ndarray
 
 class RefinementEnv2d(EnvBase):
     def __init__(self, nu, scale):
-        cell_nums = (32 * scale, 24 * scale)
+        cell_nums = (int(32 * scale), int(24 * scale))
         E = 100
         vol_tol = 1e-3
         edge_sample_num = 2

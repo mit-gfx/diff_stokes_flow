@@ -65,3 +65,6 @@ Finally, if you would like to run all these numerical experiments above, you can
 
 ### Rendering
 Run `python pbrt_renderer_demo.py` to see how to use the Python wrapper of pbrt-v3.
+
+Additionally, we have also providd a few Python scripts for generating figures in the presentation:
+- `draw_pipeline`: generate each subfigure in the whole pipeline.
