@@ -68,3 +68,5 @@ Run `python pbrt_renderer_demo.py` to see how to use the Python wrapper of pbrt-
 
 Additionally, we have also providd a few Python scripts for generating figures in the presentation:
 - `draw_pipeline`: generate each subfigure in the whole pipeline.
+- `draw_design`: generate pictures for the design section.
+- `draw_optimization`: generate video and pictures for the optimization section.
