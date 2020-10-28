@@ -32,7 +32,7 @@ if __name__ == '__main__':
     env = AmplifierEnv2d(seed, folder)
 
     create_folder(folder / 'init_design', exist_ok=True)
-    def draw_init_design(design_params, file_name):
+    def draw_init_design(design_params, file_name, draw_control_points=False):
         _, info = env.solve(design_params, False, { 'solver': 'eigen' })
         u = info['velocity_field']
         node_nums = env.node_nums()
@@ -115,6 +115,19 @@ if __name__ == '__main__':
                 v0 = ndarray([i, intercepts[i][k]])
                 v1 = ndarray([i + 1, intercepts[i + 1][k]])
                 interfaces.append((v0, v1))
+
+        if draw_control_points:
+            shape_params, _ = env._variables_to_shape_params(design_params)
+            shape_params = shape_params.reshape((8, 2))
+            control_lines = []
+            for i in range(3):
+                v0 = shape_params[i]
+                v1 = shape_params[i + 1]
+                control_lines.append((v0, v1))
+                v0 = shape_params[4 + i]
+                v1 = shape_params[4 + i + 1]
+                control_lines.append((v0, v1))
+            ax.add_collection(mc.LineCollection(control_lines, colors='tab:orange', linestyles='-.', linewidth=2.0))
 
         ax.add_collection(mc.LineCollection(interfaces, colors='k', linewidth=4.0))
         ax.add_collection(mc.LineCollection(thin_lines, colors='k', linewidth=1.0))
@@ -243,5 +256,7 @@ if __name__ == '__main__':
         for i in range(fps):
             t = i / fps
             xk = (1 - t) * xk0 + t * xk1
-            draw_init_design(xk, 'init_design/{:04d}.png'.format(k * fps + i))
+            draw_init_design(xk, 'init_design/{:04d}.png'.format(k * fps + i), draw_control_points=True)
+            if k == 0 and i == 0:
+                draw_init_design(xk, '{:04d}.png'.format(k * fps + i), draw_control_points=False)
             draw_signed_distance(xk, 'signed_dist/{:04d}.png'.format(k * fps + i))
