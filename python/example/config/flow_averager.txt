@@ -1,5 +1,5 @@
-seed: 42
-sample_num: 32
+seed: 4
+sample_num: 4
 solver: eigen
 rel_tol: 1e-4
 max_iter: 50
