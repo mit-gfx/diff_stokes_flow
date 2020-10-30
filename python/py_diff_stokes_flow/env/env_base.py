@@ -245,30 +245,35 @@ class EnvBase:
         scene = info['scene']
         u_field = info['velocity_field']
 
-        fig = plt.figure(figsize=(16, 9))
-        ax = fig.add_subplot(111)
         cx, cy = self._cell_nums
-        padding = 3
-        ax.set_xlim([-padding, cx + padding])
-        ax.set_ylim([-padding, cy + padding])
+        face_color = ndarray([247 / 255, 247 / 255, 247 / 255])
+        plt.rcParams['figure.facecolor'] = face_color
+        plt.rcParams['axes.facecolor'] = face_color
+        fig = plt.figure(figsize=(12, 10))
+        ax = fig.add_subplot(111)
+        padding = 5
+        ax.set_title('Loss: {:3.6e}'.format(loss))
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.set_title('Loss: {:3.6e}'.format(loss))
+        ax.set_xlim([-padding, cx + padding])
+        ax.set_ylim([-padding, cy + padding])
+        ax.set_aspect('equal')
+        ax.axis('off')
 
         # Plot cells.
         lines = []
         colors = []
-        shift = 0.05
+        shift = 0.0
         fluidic_node = np.ones((cx + 1, cy + 1))
         for i in range(cx):
             for j in range(cy):
                 if scene.IsFluidCell((i, j)):
-                    color = 'tab:blue'
+                    color = 'k'
                 elif scene.IsSolidCell((i, j)):
-                    color = 'tab:orange'
+                    color = 'k'
                     fluidic_node[i, j] = fluidic_node[i + 1, j] = fluidic_node[i, j + 1] = fluidic_node[i + 1, j + 1] = 0
                 else:
-                    color = 'tab:cyan'
+                    color = 'k'
                 pts = [(i + shift, j + shift),
                     (i + 1 - shift, j + shift),
                     (i + 1 - shift, j + 1 - shift),
@@ -281,17 +286,37 @@ class EnvBase:
                     (pts[3], pts[0])
                 ]
                 colors += [color,] * 4
-        ax.add_collection(mc.LineCollection(lines, colors=colors, linestyle='-.', alpha=0.3))
+        ax.add_collection(mc.LineCollection(lines, colors=colors, linewidth=0.5))
 
         # Plot velocity fields.
+        cmap = plt.get_cmap('coolwarm')
         lines = []
+        colors = []
+        u_min = np.inf
+        u_max = -np.inf
+        for i in range(cx + 1):
+            for j in range(cy + 1):
+                uij = u_field[i, j]
+                uij_norm = np.linalg.norm(uij)
+                if uij_norm > 0:
+                    if uij_norm > u_max:
+                        u_max = uij_norm
+                    if uij_norm < u_min:
+                        u_min = uij_norm
+
         for i in range(cx + 1):
             for j in range(cy + 1):
                 if not fluidic_node[i, j]: continue
-                v_begin = ndarray([i, j])
-                v_end = v_begin + u_field[i, j]
-                lines.append((v_begin, v_end))
-        ax.add_collection(mc.LineCollection(lines, colors='tab:blue', linestyle='-'))
+                uij = u_field[i, j]
+                uij_norm = np.linalg.norm(uij)
+                v0 = ndarray([i, j])
+                v1 = v0 + uij
+                lines.append((v0, v1))
+                # Determine the color.
+                color = cmap((uij_norm - u_min) / (u_max - u_min))
+                colors.append(color)
+
+        ax.add_collection(mc.LineCollection(lines, colors=colors, linewidth=1.0))
 
         # Plot solid-fluid interfaces.
         lines = []
@@ -315,7 +340,7 @@ class EnvBase:
                 vs_len = len(vs)
                 for k in range(vs_len):
                     lines.append((vs[k], vs[(k + 1) % vs_len]))
-        ax.add_collection(mc.LineCollection(lines, colors='tab:olive', linestyle='-'))
+        ax.add_collection(mc.LineCollection(lines, colors='tab:orange', linewidth=1))
 
         # Plot other customized data if needed.
         self._render_customized_2d(scene, ax)
