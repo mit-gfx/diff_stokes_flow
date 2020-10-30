@@ -51,6 +51,8 @@ Run `python run_demo.py [demo_name]` where `[demo_name]` can be any of the follo
 ![flow_averager](asset/video/flow_averager.gif)
 - `superposition_gate`: run the `Superposition Gate` demo (Fig. 4) in the paper.
 ![superposition_gate](asset/video/superposition_gate.gif)
+- `funnel`: run the `Funnel` demo (Fig. 4) in the paper.
+![funnel](asset/video/funnel.gif)
 
 Run `python refinement.py` to generate Fig. 8 in the paper.
 

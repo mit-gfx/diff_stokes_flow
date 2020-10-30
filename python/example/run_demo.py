@@ -20,6 +20,7 @@ all_demo_names = {
     'amplifier': ('amplifier_env_2d', 'AmplifierEnv2d'),
     'flow_averager': ('flow_averager_env_3d', 'FlowAveragerEnv3d'),
     'superposition_gate': ('superposition_gate_env_3d', 'SuperpositionGateEnv3d'),
+    'funnel': ('funnel_env_3d', 'FunnelEnv3d'),
 }
 
 if __name__ == '__main__':
