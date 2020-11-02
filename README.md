@@ -53,6 +53,8 @@ Run `python run_demo.py [demo_name]` where `[demo_name]` can be any of the follo
 ![superposition_gate](asset/video/superposition_gate.gif)
 - `funnel`: run the `Funnel` demo (Fig. 4) in the paper.
 ![funnel](asset/video/funnel.gif)
+- `fluidic_twister`: run the `Fluidic Twister` demo (Fig. 5) in the paper. Note that the original result was run with a resolution of 64 by 64 by 32, and we downsampled it in this codebase for a faster demo.
+![fluidic_twister](asset/video/fluidic_twister.gif)
 
 Run `python refinement.py` to generate Fig. 8 in the paper.
 

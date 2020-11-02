@@ -13,12 +13,15 @@
 // counter-clockwise order.
 class PolarBezier2d : public ParametricShape<2> {
 public:
+    PolarBezier2d(const bool flip);
+
     const real ComputeSignedDistanceAndGradients(const std::array<real, 2>& point,
         std::vector<real>& grad) const override;
 
 private:
     void InitializeCustomizedData() override;
 
+    bool flip_;
     int bezier_num_;
     std::vector<real> rho_;
     Vector2r center_;
@@ -39,7 +42,7 @@ private:
 // - angle_offset.
 class PolarBezier3d : public ParametricShape<3> {
 public:
-    PolarBezier3d(const int z_level_num);
+    PolarBezier3d(const bool flip, const int z_level_num);
 
     const real ComputeSignedDistanceAndGradients(const std::array<real, 3>& point,
         std::vector<real>& grad) const override;
@@ -47,6 +50,7 @@ public:
 private:
     void InitializeCustomizedData() override;
 
+    bool flip_;
     int bezier_num_;
     std::vector<std::vector<real>> rho_;
     Vector2r center_;

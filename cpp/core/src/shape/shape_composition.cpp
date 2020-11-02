@@ -18,7 +18,9 @@ void ShapeComposition<2>::AddParametricShape(const std::string& name, const int 
     } else if (name == "sphere") {
         info.shape = std::make_shared<Sphere<2>>();
     } else if (name == "polar_bezier") {
-        info.shape = std::make_shared<PolarBezier2d>();
+        // Do not flip in 2D.
+        const bool flip = false;
+        info.shape = std::make_shared<PolarBezier2d>(flip);
     } else {
         PrintError("Unsupported shape name: " + name);
     }
@@ -39,8 +41,10 @@ void ShapeComposition<3>::AddParametricShape(const std::string& name, const int 
         info.shape = std::make_shared<Sphere<3>>();
     } else if (BeginsWith(name, "polar_bezier")) {
         // Fetch z_level_num.
-        const int z_level_num = std::stoi(name.substr(std::string("polar_bezier").size()));
-        info.shape = std::make_shared<PolarBezier3d>(z_level_num);
+        const int z_level_num_signed = std::stoi(name.substr(std::string("polar_bezier").size()));
+        const bool flip = z_level_num_signed < 0;
+        const int z_level_num = flip ? -z_level_num_signed : z_level_num_signed;
+        info.shape = std::make_shared<PolarBezier3d>(flip, z_level_num);
     } else {
         PrintError("Unsupported shape name: " + name);
     }

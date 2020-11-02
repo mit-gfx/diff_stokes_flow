@@ -1,6 +1,9 @@
 #include "shape/polar_bezier.h"
 #include "common/common.h"
 
+PolarBezier2d::PolarBezier2d(const bool flip)
+    : flip_(flip) {}
+
 const real PolarBezier2d::ComputeSignedDistanceAndGradients(const std::array<real, 2>& point,
     std::vector<real>& grad) const {
     // Determine the curve that covers point.
@@ -35,8 +38,8 @@ const real PolarBezier2d::ComputeSignedDistanceAndGradients(const std::array<rea
         const int idx = (min_idx * 3 + k) % (bezier_num_ * 3);
         g += VectorXr(RowVector2r(min_grad.segment(k * 2, 2)) * control_points_gradients_[idx]);
     }
-    grad = ToStdVector(sign * g);
-    return sign * min_abs_dist;
+    grad = ToStdVector(sign * g * (flip_ ? -1 : 1));
+    return sign * min_abs_dist * (flip_ ? -1 : 1);
 }
 
 void PolarBezier2d::InitializeCustomizedData() {
@@ -123,8 +126,8 @@ void PolarBezier2d::InitializeCustomizedData() {
     }
 }
 
-PolarBezier3d::PolarBezier3d(const int z_level_num)
-    : z_level_num_(z_level_num) {
+PolarBezier3d::PolarBezier3d(const bool flip, const int z_level_num)
+    : flip_(flip), z_level_num_(z_level_num) {
     CheckError(z_level_num_ >= 2, "Inconsistent z_level_num.");
 }
 
@@ -145,7 +148,7 @@ const real PolarBezier3d::ComputeSignedDistanceAndGradients(const std::array<rea
         }
         rho_single[i] = t_coeff.dot(p);
     }
-    PolarBezier2d polar_bezier;
+    PolarBezier2d polar_bezier(flip_);
     std::array<int, 2> xy_cell_nums{ cell_nums()[0], cell_nums()[1] };
     rho_single[2 * bezier_num_] = center_.x();
     rho_single[2 * bezier_num_ + 1] = center_.y();

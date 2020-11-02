@@ -263,10 +263,15 @@ const std::vector<real> Scene<dim>::Forward(const std::string& qp_solver_name) {
         PrintError("Unsupported QP solver: " + qp_solver_name + ". Please use eigen or pardiso.");
     }
     // Sanity check.
-    const real abs_tol = ToReal(1e-4);
-    const real rel_tol = ToReal(1e-3);
+    const real abs_tol = ToReal(1e-3);
+    const real rel_tol = ToReal(1e-2);
     const real abs_error_x = (KC_ * x - d_ext).norm();
-    CheckError(abs_error_x <= d_ext.norm() * rel_tol + abs_tol, "QP solver fails to solve d_ext.");
+    const bool solved_d_ext = abs_error_x <= d_ext.norm() * rel_tol + abs_tol;
+    if (!solved_d_ext) {
+        PrintWarning("QP solver does not solve d_ext to a desired accuracy.");
+        std::cout << "abs_error_x: " << abs_error_x << ", |d_ext|: " << d_ext.norm()
+            << ", rel_tol: " << rel_tol << ", abs_tol: " << abs_tol << std::endl;
+    }
 
     // Solve -K * u, or equivalently, -KC * [u, 0].
     VectorXr u0 = x;
@@ -301,11 +306,15 @@ const std::vector<real> Scene<dim>::Backward(const std::string& qp_solver_name,
         PrintError("Unsupported QP solver: " + qp_solver_name + ". Please use eigen or pardiso.");
     }
 
-    const real abs_tol = ToReal(1e-4);
-    const real rel_tol = ToReal(1e-3);
+    const real abs_tol = ToReal(1e-3);
+    const real rel_tol = ToReal(1e-2);
     const real abs_error_y = (KC_ * y + dloss_du).norm();
-    CheckError(abs_error_y <= dloss_du.norm() * rel_tol + abs_tol, "QP solver fails to solve dloss_du.");
-
+    const bool solved_dloss_du = abs_error_y <= dloss_du.norm() * rel_tol + abs_tol;
+    if (!solved_dloss_du) {
+        PrintWarning("QP solver does not solve dloss_du to a desired accuracy.");
+        std::cout << "abs_error_y: " << abs_error_y << ", |dloss_du|: " << dloss_du.norm()
+            << ", rel_tol: " << rel_tol << ", abs_tol: " << abs_tol << std::endl;
+    }
     const int param_num = shape_.param_num();
     std::vector<real> d_loss_d_params(param_num, 0);
     #pragma omp parallel for
