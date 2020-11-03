@@ -150,6 +150,6 @@ void Bezier3d::InitializeCustomizedData() {
     std::array<int, 2> sketch_cell_nums;
     for (int i = 0; i < 2; ++i) sketch_cell_nums[i] = cell_num(i);
     const std::vector<real> sketch_params(params().data(), params().data() + 8);
-    sketch_->Initialize(sketch_cell_nums, sketch_params);
+    sketch_->Initialize(sketch_cell_nums, sketch_params, false);
     for (int i = 0; i < 3; ++i) dir_(i) = params()[8 + i];
 }

@@ -37,7 +37,7 @@ def test_bezier_2d(verbose):
     ])
     control_points[:, 1] += np.random.normal(size=4)
     bezier = Bezier2d()
-    bezier.Initialize(cell_nums, control_points.ravel())
+    bezier.Initialize(cell_nums, control_points.ravel(), True)
     sdf = ndarray(bezier.signed_distances())
     sdf_master = np.load(folder / 'sdf_master.npy')
     if np.max(np.abs(sdf - sdf_master)) > 0:
@@ -54,7 +54,7 @@ def test_bezier_2d(verbose):
     sdf_weight = np.random.normal(size=(nx, ny))
     def loss_and_grad(x):
         bezier = Bezier2d()
-        bezier.Initialize(cell_nums, x.ravel())
+        bezier.Initialize(cell_nums, x.ravel(), True)
         sdf = ndarray(bezier.signed_distances())
         loss = sdf_weight.ravel().dot(sdf)
         grad = 0

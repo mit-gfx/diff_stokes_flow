@@ -14,7 +14,11 @@ public:
     ParametricShape();
     virtual ~ParametricShape() {}
 
-    void Initialize(const std::array<int, dim>& cell_nums, const std::vector<real>& params);
+    // Set compute_signed_distance_and_grad = true if you want to compute signed_distances_ and
+    // signed_distances_gradients_ and false if you only want to call ComputeSignedDistanceAndGradients for random
+    // points.
+    void Initialize(const std::array<int, dim>& cell_nums, const std::vector<real>& params,
+        const bool compute_signed_distance_and_grad);
 
     const int cell_num(const int i) const;
     const std::array<int, dim>& cell_nums() const { return cell_nums_; }

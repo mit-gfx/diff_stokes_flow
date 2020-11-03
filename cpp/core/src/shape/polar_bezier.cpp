@@ -122,7 +122,7 @@ void PolarBezier2d::InitializeCustomizedData() {
             bezier_params[2 * k + 1] = control_points_[(3 * i + k) % (bezier_num_ * 3)](1);
         }
         bezier_curves_[i] = std::make_shared<Bezier2d>();
-        bezier_curves_[i]->Initialize(cell_nums(), bezier_params);
+        bezier_curves_[i]->Initialize(cell_nums(), bezier_params, false);
     }
 }
 
@@ -153,7 +153,7 @@ const real PolarBezier3d::ComputeSignedDistanceAndGradients(const std::array<rea
     rho_single[2 * bezier_num_] = center_.x();
     rho_single[2 * bezier_num_ + 1] = center_.y();
     rho_single[2 * bezier_num_ + 2] = angle_offset_;
-    polar_bezier.Initialize(xy_cell_nums, rho_single);
+    polar_bezier.Initialize(xy_cell_nums, rho_single, false);
 
     std::array<real, 2> xy_point{ point[0], point[1] };
     std::vector<real> xy_grad;

@@ -31,14 +31,13 @@ def test_shape_composition_3d_single(shape_info, verbose):
         params.append(ndarray(param).ravel())
     params = np.concatenate(params)
     params += np.random.normal(size=params.size) * 0.01
-    shape.Initialize(cell_nums, params)
+    shape.Initialize(cell_nums, params, True)
 
     # Verify the gradients.
+    sdf = ndarray(shape.signed_distances())
     nx = shape.node_num(0)
     ny = shape.node_num(1)
     nz = shape.node_num(2)
-    shape.Initialize(cell_nums, params.ravel())
-    sdf = ndarray(shape.signed_distances())
     sdf = sdf.reshape((nx, ny, nz))
 
     if verbose:
@@ -69,7 +68,7 @@ def test_shape_composition_3d_single(shape_info, verbose):
 
     sdf_weight = np.random.normal(size=(nx, ny, nz))
     def loss_and_grad(x):
-        shape.Initialize(cell_nums, x)
+        shape.Initialize(cell_nums, x, True)
         sdf = ndarray(shape.signed_distances())
         loss = sdf_weight.ravel().dot(sdf)
         grad = 0

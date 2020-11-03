@@ -16,7 +16,7 @@ void Scene<dim>::InitializeShapeComposition(const std::array<int, dim>& cell_num
         shape_.AddParametricShape(shape_names[i], static_cast<int>(shape_params[i].size()));
         params.insert(params.end(), shape_params[i].begin(), shape_params[i].end());
     }
-    shape_.Initialize(cell_nums, params);
+    shape_.Initialize(cell_nums, params, true);
 }
 
 template<int dim>

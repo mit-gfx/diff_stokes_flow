@@ -36,7 +36,7 @@ class FluidicTwisterEnv3d(EnvBase):
             ])
             bezier.AddParametricShape('polar_bezier', params.size)
             cxy = StdIntArray2d((int(cx), int(cy)))
-            bezier.Initialize(cxy, params)
+            bezier.Initialize(cxy, params, True)
             return bezier
         inlet_bezier = get_bezier(inlet_radius)
         outlet_bezier = get_bezier(outlet_radius)

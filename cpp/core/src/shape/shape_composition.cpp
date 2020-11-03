@@ -58,7 +58,7 @@ void ShapeComposition<dim>::InitializeCustomizedData() {
         info.param_begin_idx = param_cur_idx;
         const std::vector<real> shape_param(ParametricShape<dim>::params().begin() + param_cur_idx,
             ParametricShape<dim>::params().begin() + param_cur_idx + info.param_num);
-        info.shape->Initialize(ParametricShape<dim>::cell_nums(), shape_param);
+        info.shape->Initialize(ParametricShape<dim>::cell_nums(), shape_param, true);
         param_cur_idx += info.param_num;
     }
 }
