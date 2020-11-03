@@ -8,7 +8,7 @@ class FluidicTwisterEnv3d(EnvBase):
     def __init__(self, seed, folder):
         np.random.seed(seed)
 
-        cell_nums = (16, 16, 8)
+        cell_nums = (32, 32, 16)
         E = 100
         nu = 0.499
         vol_tol = 1e-2
