@@ -33,12 +33,12 @@ if __name__ == '__main__':
 
     def draw_init_design(design_params, file_name):
         _, info = env.solve(design_params, False, { 'solver': 'eigen' })
-        u = info['velocity_field']
+        u = info[0]['velocity_field']
         node_nums = env.node_nums()
         sdf = np.zeros(node_nums)
         for i in range(node_nums[0]):
             for j in range(node_nums[1]):
-                sdf[i, j] = info['scene'].GetSignedDistance((i, j))
+                sdf[i, j] = info[0]['scene'].GetSignedDistance((i, j))
                 if sdf[i, j] >= 0:
                     u[i, j] = 0
 
@@ -136,12 +136,12 @@ if __name__ == '__main__':
     # Render the optimal design.
     def draw_optimized_designs(design_params, file_name):
         _, info = env.solve(design_params, False, { 'solver': 'eigen' })
-        u = info['velocity_field']
+        u = info[0]['velocity_field']
         node_nums = env.node_nums()
         sdf = np.zeros(node_nums)
         for i in range(node_nums[0]):
             for j in range(node_nums[1]):
-                sdf[i, j] = info['scene'].GetSignedDistance((i, j))
+                sdf[i, j] = info[0]['scene'].GetSignedDistance((i, j))
                 if sdf[i, j] >= 0:
                     u[i, j] = 0
 
@@ -253,12 +253,12 @@ if __name__ == '__main__':
     # Render the optimal design.
     def draw_simulation(design_params, file_name):
         _, info = env.solve(design_params, False, { 'solver': 'eigen' })
-        u = info['velocity_field']
+        u = info[0]['velocity_field']
         node_nums = env.node_nums()
         sdf = np.zeros(node_nums)
         for i in range(node_nums[0]):
             for j in range(node_nums[1]):
-                sdf[i, j] = info['scene'].GetSignedDistance((i, j))
+                sdf[i, j] = info[0]['scene'].GetSignedDistance((i, j))
                 if sdf[i, j] >= 0:
                     u[i, j] = 0
 

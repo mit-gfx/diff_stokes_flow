@@ -19,12 +19,12 @@ if __name__ == '__main__':
     env = RefinementEnv2d(0.45, scale)
 
     _, info = env.solve(env.sample(), False, { 'solver': 'eigen' })
-    u = info['velocity_field']
+    u = info[0]['velocity_field']
     node_nums = env.node_nums()
     sdf = np.zeros(node_nums)
     for i in range(node_nums[0]):
         for j in range(node_nums[1]):
-            sdf[i, j] = info['scene'].GetSignedDistance((i, j))
+            sdf[i, j] = info[0]['scene'].GetSignedDistance((i, j))
             if sdf[i, j] >= 0:
                 u[i, j] = 0
 

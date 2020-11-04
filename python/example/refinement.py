@@ -13,11 +13,11 @@ cell_nums = RefinementEnv2d(0.45, 1).cell_nums()
 def solve_forward_amplifier_2d(nu, scale):
     env = RefinementEnv2d(nu, scale)
     _, info = env.solve(env.sample(), False, { 'solver': 'eigen' })
-    u = info['velocity_field']
+    u = info[0]['velocity_field']
     node_nums = env.node_nums()
     for i in range(node_nums[0]):
         for j in range(node_nums[1]):
-            if info['scene'].GetSignedDistance((i, j)) >= 0:
+            if info[0]['scene'].GetSignedDistance((i, j)) >= 0:
                 u[i, j] = 0
     return u
 

@@ -1,6 +1,7 @@
 import sys
 sys.path.append('../')
 
+from pathlib import Path
 import numpy as np
 from importlib import import_module
 import scipy.optimize
@@ -22,6 +23,7 @@ all_demo_names = {
     'superposition_gate': ('superposition_gate_env_3d', 'SuperpositionGateEnv3d'),
     'funnel': ('funnel_env_3d', 'FunnelEnv3d'),
     'fluidic_twister': ('fluidic_twister_env_3d', 'FluidicTwisterEnv3d'),
+    'fluidic_switch': ('fluidic_switch_env_3d', 'FluidicSwitchEnv3d'),
 }
 
 if __name__ == '__main__':
@@ -178,9 +180,18 @@ if __name__ == '__main__':
             t = i / fps
             xk = (1 - t) * xk0 + t * xk1
             env.render(xk, '{:04d}.png'.format(k * fps + i), { 'solver': solver, 'spp': spp })
-            print_info('{}/{:04d}.png is ready.'.format(demo_name, k * fps + i))
+            print_info('{}/mode_[0-9]*/{:04d}.png is ready.'.format(demo_name, k * fps + i))
     env.render(opt_history[-1][0], '{:04d}.png'.format((cnt - 1) * fps), { 'solver': solver, 'spp': spp })
-    print_info('{}/{:04d}.png is ready.'.format(demo_name, (cnt - 1) * fps))
+    print_info('{}/mode_[0-9]*/{:04d}.png is ready.'.format(demo_name, (cnt - 1) * fps))
 
-    export_gif(demo_name, '{}.gif'.format(demo_name), fps=fps)
-    print_info('Video {}.gif is ready.'.format(demo_name))
+    # Get mode number.
+    mode_num = 0
+    while True:
+        mode_folder = Path(demo_name) / 'mode_{:04d}'.format(mode_num)
+        if not mode_folder.exists():
+            break
+
+        export_gif(mode_folder, '{}_{:04d}.gif'.format(demo_name, mode_num), fps=fps)
+        print_info('Video {}_{:04d}.gif is ready.'.format(demo_name, mode_num))
+
+        mode_num += 1
