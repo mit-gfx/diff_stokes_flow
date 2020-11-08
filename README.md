@@ -78,7 +78,7 @@ Run `python [script_name].py` where `[script_name]` can be any of the following:
 Finally, if you would like to run all these numerical experiments above, you can simply call `run_all_tests`:
 - `run_all_tests`: this will sequentially run all the aforementioned numerical tests.
 
-Run `python refinement.py` to generate the numerical resutls in Fig. 8 in the paper.
+Run `python refinement.py` to generate the numerical results in Fig. 8 in the paper.
 
 ### Rendering
 Run `python pbrt_renderer_demo.py` to see how to use the Python wrapper of pbrt-v3.
