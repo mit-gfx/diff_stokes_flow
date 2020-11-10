@@ -104,13 +104,15 @@ class FluidicForceDensityEnv2d(EnvBase):
     def _loss_and_grad_on_velocity_field(self, u):
         return 0, ndarray(np.zeros(u.shape).ravel())
 
-    def _render_customized_2d(self, scene, ax):
+    def _render_customized_2d(self, scene, u_field, ax):
         nx, ny = self._node_nums
         lines = []
+        scale = 0.1
         for i in range(nx):
             for j in range(ny):
+                if scene.GetSignedDistance((i, j)) > 0: continue
                 v_begin = ndarray([i, j])
-                v_end = v_begin + ndarray(scene.GetFluidicForceDensity((i, j)))
+                v_end = v_begin + scale * ndarray(scene.GetFluidicForceDensity((i, j)))
                 lines.append((v_begin, v_end))
         ax.add_collection(mc.LineCollection(lines, colors='tab:red', linestyle='-'))
 

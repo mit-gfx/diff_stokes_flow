@@ -80,14 +80,18 @@ Finally, if you would like to run all these numerical experiments above, you can
 
 Run `python refinement.py` to generate the numerical resutls in Fig. 8 in the paper.
 
-### Rendering
+### Rendering and visualization
 Run `python pbrt_renderer_demo.py` to see how to use the Python wrapper of pbrt-v3.
 
-Additionally, we have also provided a few Python scripts for generating figures in the presentation:
+Additionally, we provide a few Python scripts for generating figures in the presentation:
 - `python draw_pipeline.py`: generate each subfigure in the whole pipeline.
 - `python draw_design.py`: generate pictures for the design section.
 - `python draw_discretization.py`: generate pictures for the discretization section.
 - `python draw_optimization.py`: generate video and pictures for the optimization section.
+
+Finally, we present Python scripts to visualize the elastic forces and traction along the boundary.
+- `python fluidic_force_density_2d.py`: code to demonstrate how to visualize the elastic force in the fluidic phase.
+- `python fluidic_traction_density_2d.py`: code to demonstrate how to visualize the traction on the solid-fluid interface.
 
 ## How to cite
 ```text

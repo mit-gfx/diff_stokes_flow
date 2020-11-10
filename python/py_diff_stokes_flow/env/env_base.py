@@ -370,12 +370,12 @@ class EnvBase:
             ax.add_collection(mc.LineCollection(lines, colors='tab:orange', linewidth=1))
 
             # Plot other customized data if needed.
-            self._render_customized_2d(scene, ax)
+            self._render_customized_2d(scene, u_field, ax)
 
             fig.savefig(mode_folder / img_name)
             plt.close()
 
-    def _render_customized_2d(self, scene, ax):
+    def _render_customized_2d(self, scene, u_field, ax):
         pass
 
     def _render_3d(self, xk, img_name, options):

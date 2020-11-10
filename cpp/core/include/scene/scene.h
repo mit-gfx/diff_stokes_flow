@@ -33,6 +33,10 @@ public:
     const bool IsFluidCell(const std::array<int, dim>& cell_idx) const;
     const bool IsMixedCell(const std::array<int, dim>& cell_idx) const;
 
+    // Recall that normal.dot(x) + offset >= 0 is the solid phase in the cell.
+    const std::array<real, dim> GetNormalInMixedCell(const std::array<int, dim>& cell_idx) const;
+    const real GetOffsetInMixedCell(const std::array<int, dim>& cell_idx) const;
+
 private:
     // Geometry information.
     ShapeComposition<dim> shape_;

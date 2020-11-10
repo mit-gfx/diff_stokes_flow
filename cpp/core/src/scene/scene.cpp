@@ -373,5 +373,23 @@ const bool Scene<dim>::IsMixedCell(const std::array<int, dim>& cell_idx) const {
     return cell.IsMixedCell();
 }
 
+// Recall that normal.dot(x) + offset >= 0 is the solid phase in the cell.
+template<int dim>
+const std::array<real, dim> Scene<dim>::GetNormalInMixedCell(const std::array<int, dim>& cell_idx) const {
+    const auto& cell = cells_.at(GetIndex(cell_idx, shape_.cell_nums()));
+    CheckError(cell.IsMixedCell(), "GetNormalInMixedCell should only be called for mixed cells.");
+    std::array<real, dim> normal;
+    for (int i = 0; i < dim; ++i)
+        normal[i] = cell.normal()(i);
+    return normal;
+}
+
+template<int dim>
+const real Scene<dim>::GetOffsetInMixedCell(const std::array<int, dim>& cell_idx) const {
+    const auto& cell = cells_.at(GetIndex(cell_idx, shape_.cell_nums()));
+    CheckError(cell.IsMixedCell(), "GetOffsetInMixedCell should only be called for mixed cells.");
+    return cell.offset();
+}
+
 template class Scene<2>;
 template class Scene<3>;
