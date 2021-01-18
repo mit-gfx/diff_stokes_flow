@@ -24,6 +24,7 @@ all_demo_names = {
     'funnel': ('funnel_env_3d', 'FunnelEnv3d'),
     'fluidic_twister': ('fluidic_twister_env_3d', 'FluidicTwisterEnv3d'),
     'fluidic_switch': ('fluidic_switch_env_3d', 'FluidicSwitchEnv3d'),
+    'pipe': ('pipe_env_2d', 'PipeEnv2d'),
 }
 
 if __name__ == '__main__':

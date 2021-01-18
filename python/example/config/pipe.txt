@@ -1,0 +1,8 @@
+seed: 42
+sample_num: 10
+solver: pardiso
+rel_tol: 1e-5
+max_iter: 50
+enable_grad_check: True
+spp: 64
+fps: 1
