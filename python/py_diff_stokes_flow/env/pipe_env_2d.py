@@ -21,9 +21,13 @@ class PipeEnv2d(EnvBase):
         cx, cy = cell_nums
         assert cx == cy
         nx, ny = cx + 1, cy + 1
-        self._velocity_type = 'quadratic'   # 'quadratic' or 'const'.
+        self._velocity_type = 'const'   # 'quadratic' or 'const'.
+        self._loss_type = 'compliance'  # 'compliance' or 'velocity'.
         # Initialize the interface.
-        self._interface_boundary_type = 'no-slip'   # Choose 'no-slip' or 'free-slip'.
+        self._interface_boundary_type = 'free-slip'   # Choose 'no-slip' or 'free-slip'.
+        assert self._velocity_type in ['const', 'quadratic']
+        assert self._loss_type in ['compliance', 'velocity']
+        assert self._interface_boundary_type in ['free-slip', 'no-slip']
 
         inlet_velocity = 1
         inlet_range = ndarray([0.7, 0.9])
@@ -50,6 +54,20 @@ class PipeEnv2d(EnvBase):
                     raise NotImplementedError
                 self._node_boundary_info.append(((0, j, 0), v))
                 self._node_boundary_info.append(((0, j, 1), 0))
+
+        if self._loss_type == 'compliance':
+            for i in range(cx + 1):
+                if outlet_lb <= i <= outlet_ub:
+                    # Compute the quadratic profile.
+                    if self._velocity_type == 'const':
+                        v = inlet_velocity
+                    elif self._velocity_type == 'quadratic':
+                        nj = (i / cy - 0.8) / 0.1
+                        v = (1 - nj ** 2) * inlet_velocity
+                    else:
+                        raise NotImplementedError
+                    self._node_boundary_info.append(((i, 0, 0), 0))
+                    self._node_boundary_info.append(((i, 0, 1), -v))
 
         # Other data members.
         self._inlet_velocity = inlet_velocity
@@ -92,31 +110,42 @@ class PipeEnv2d(EnvBase):
         J *= cx
         return ndarray(params).copy(), ndarray(J).copy()
 
-    def _loss_and_grad_on_velocity_field(self, u):
+    def _loss_and_grad(self, scene, u):
         u = ndarray(u).copy().ravel()
-        u_field = self.reshape_velocity_field(u)
-        grad = np.zeros(u_field.shape)
-        cnt = 0
-        loss = 0
-        nx, _ = self._node_nums
-        cx, cy = self._cell_nums
-        for i in range(nx):
-            if self._outlet_lb <= i <= self._outlet_ub:
-                cnt += 1
-                # Compute the quadratic profile.
-                if self._velocity_type == 'const':
-                    v = self._inlet_velocity
-                elif self._velocity_type == 'quadratic':
-                    nj = (i / cy - 0.8) / 0.1
-                    v = (1 - nj ** 2) * self._inlet_velocity
-                else:
-                    raise NotImplementedError
-                u_diff = ndarray(u_field[i, 0]) - ndarray([0, -v])
-                loss += u_diff.dot(u_diff)
-                grad[i, 0] += 2 * u_diff
-        loss /= cnt
-        grad /= cnt
-        return loss, ndarray(grad).ravel()
+        if self._loss_type == 'velocity':
+            param_size = self._variables_to_shape_params(self.lower_bound())[0].size
+            grad_param = ndarray(np.zeros(param_size))
+
+            u_field = self.reshape_velocity_field(u)
+            grad = np.zeros(u_field.shape)
+            cnt = 0
+            loss = 0
+            nx, _ = self._node_nums
+            cx, cy = self._cell_nums
+            for i in range(nx):
+                if self._outlet_lb <= i <= self._outlet_ub:
+                    cnt += 1
+                    # Compute the quadratic profile.
+                    if self._velocity_type == 'const':
+                        v = self._inlet_velocity
+                    elif self._velocity_type == 'quadratic':
+                        nj = (i / cy - 0.8) / 0.1
+                        v = (1 - nj ** 2) * self._inlet_velocity
+                    else:
+                        raise NotImplementedError
+                    u_diff = ndarray(u_field[i, 0]) - ndarray([0, -v])
+                    loss += u_diff.dot(u_diff)
+                    grad[i, 0] += 2 * u_diff
+            loss /= cnt
+            grad /= cnt
+            return loss, ndarray(grad).ravel(), grad_param
+        elif self._loss_type == 'compliance':
+            loss = scene.ComputeElasticEnergy(u)
+            grad_u = ndarray(scene.ComputeElasticEnergyVelocityGradient(u))
+            grad_param = ndarray(scene.ComputeElasticEnergyParameterGradient(u))
+            return loss, grad_u, grad_param
+        else:
+            raise NotImplementedError
 
     def sample(self):
         return np.random.uniform(low=self.lower_bound(), high=self.upper_bound())

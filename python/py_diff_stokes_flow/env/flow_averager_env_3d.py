@@ -121,7 +121,10 @@ class FlowAveragerEnv3d(EnvBase):
         J[:, 1::2] *= cy
         return ndarray(params).copy(), ndarray(J).copy()
 
-    def _loss_and_grad_on_velocity_field(self, u):
+    def _loss_and_grad(self, scene, u):
+        param_size = self._variables_to_shape_params(self.lower_bound())[0].size
+        grad_param = ndarray(np.zeros(param_size))
+
         u_field = self.reshape_velocity_field(u)
         grad = np.zeros(u_field.shape)
         nx, ny, nz = self.node_nums()
@@ -137,7 +140,7 @@ class FlowAveragerEnv3d(EnvBase):
                     grad[nx - 1, j, k] += 2 * u_diff
         loss /= cnt
         grad /= cnt
-        return loss, ndarray(grad).ravel()
+        return loss, ndarray(grad).ravel(), grad_param
 
     def _color_velocity(self, u):
         return float(np.linalg.norm(u) / 3)

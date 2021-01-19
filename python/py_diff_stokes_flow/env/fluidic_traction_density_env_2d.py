@@ -88,8 +88,10 @@ class FluidicTractionDensityEnv2d(EnvBase):
         J[:, 4] *= cy
         return ndarray(params).copy(), ndarray(J).copy()
 
-    def _loss_and_grad_on_velocity_field(self, u):
-        return 0, ndarray(np.zeros(u.shape).ravel())
+    def _loss_and_grad(self, scene, u):
+        param_size = self._variables_to_shape_params(self.lower_bound())[0].size
+        grad_param = ndarray(np.zeros(param_size))
+        return 0, ndarray(np.zeros(u.shape).ravel()), grad_param
 
     def _render_customized_2d(self, scene, u_field, ax):
         nx, ny = self._node_nums

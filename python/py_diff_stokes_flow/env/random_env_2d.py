@@ -27,9 +27,12 @@ class RandomEnv2d(EnvBase):
 
         self.__u_weight = np.random.normal(size=(cell_nums[0] + 1, cell_nums[1] + 1, 2)).ravel()
 
-    def _loss_and_grad_on_velocity_field(self, u):
+    def _loss_and_grad(self, scene, u):
+        param_size = self._variables_to_shape_params(self.lower_bound())[0].size
+        grad_param = ndarray(np.zeros(param_size))
+
         loss = self.__u_weight.dot(u)
-        return loss, self.__u_weight
+        return loss, self.__u_weight, grad_param
 
     def sample(self):
         control_points_lower = ndarray([

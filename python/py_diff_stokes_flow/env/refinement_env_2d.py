@@ -40,8 +40,10 @@ class RefinementEnv2d(EnvBase):
 
         self._scale = scale
 
-    def _loss_and_grad_on_velocity_field(self, u):
-        return 0, np.zeros(u.shape)
+    def _loss_and_grad(self, scene, u):
+        param_size = self._variables_to_shape_params(self.lower_bound())[0].size
+        grad_param = ndarray(np.zeros(param_size))
+        return 0, np.zeros(u.shape), grad_param
 
     def sample(self):
         return self._sample

@@ -37,6 +37,12 @@ public:
     const std::array<real, dim> GetNormalInMixedCell(const std::array<int, dim>& cell_idx) const;
     const real GetOffsetInMixedCell(const std::array<int, dim>& cell_idx) const;
 
+    // Some special energy types.
+    // E = 0.5 * u * K * u.
+    const real ComputeElasticEnergy(const std::vector<real>& velocity_field) const;
+    const std::vector<real> ComputeElasticEnergyVelocityGradient(const std::vector<real>& velocity_field) const;
+    const std::vector<real> ComputeElasticEnergyParameterGradient(const std::vector<real>& velocity_field) const;
+
 private:
     // Geometry information.
     ShapeComposition<dim> shape_;

@@ -126,8 +126,9 @@ class EnvBase:
     # Output:
     # Either loss and grad or a list of (loss, grad), depending on the number of modes.
     # - loss: a scalar (float).
-    # - grad: a 1D array that stores grad loss/grad u.
-    def _loss_and_grad_on_velocity_field(self, u):
+    # - grad_u: a 1D array that stores grad loss/grad u.
+    # - grad_param: a 1D array that stores grad loss/grad param. This is only used when minimizing compliance.
+    def _loss_and_grad(self, scene, u):
         raise NotImplementedError
 
     # This function is used by _render_3d to determine the color of the velocity field.
@@ -239,19 +240,21 @@ class EnvBase:
             forward_result.append(forward_result_single)
 
         # Compute the loss.
-        loss_and_grad = self._loss_and_grad_on_velocity_field(u[0] if mode_num == 1 else u)
+        loss_and_grad = self._loss_and_grad(scenes[0] if mode_num == 1 else scenes,
+            u[0] if mode_num == 1 else u)
         if mode_num == 1:
             loss_and_grad = [loss_and_grad,]
-        loss = np.sum([l for l, _ in loss_and_grad])
+        loss = np.sum([l for l, _, _ in loss_and_grad])
 
         if not require_grad:
             return loss, info
 
         # Compute the gradients.
-        grads = [g for _, g in loss_and_grad]
+        grads_u = [g for _, g, _ in loss_and_grad]
+        grads_param = [g for _, _, g in loss_and_grad]
         grad = 0
-        for (_, J), scene, g, f in zip(param_and_J, scenes, grads, forward_result):
-            g = ndarray(scene.Backward(solver, f, g))
+        for (_, J), scene, gu, gp, f in zip(param_and_J, scenes, grads_u, grads_param, forward_result):
+            g = ndarray(scene.Backward(solver, f, gu)) + ndarray(gp)
             grad += J.T @ g
         return loss, grad, info
 

@@ -138,7 +138,10 @@ class FluidicSwitchEnv3d(EnvBase):
         params_off, grads_off = get_params_and_grads(25)
         return [(params_on, grads_on), (params_off, grads_off)]
 
-    def _loss_and_grad_on_velocity_field(self, u):
+    def _loss_and_grad(self, scene, u):
+        param_size = self._variables_to_shape_params(self.lower_bound())[0].size
+        grad_param = ndarray(np.zeros(param_size))
+
         assert isinstance(u, list) and len(u) == 2
         nx, ny, nz = self.node_nums()
         assert nx == ny
@@ -157,7 +160,7 @@ class FluidicSwitchEnv3d(EnvBase):
                         cnt += 1
             loss /= cnt
             grad /= cnt
-            return loss, ndarray(grad).ravel()
+            return loss, ndarray(grad).ravel(), grad_param
 
         loss_and_grad = [
             loss_and_grad(u[0], self._on_target_field),

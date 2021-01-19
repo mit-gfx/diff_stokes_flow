@@ -391,5 +391,43 @@ const real Scene<dim>::GetOffsetInMixedCell(const std::array<int, dim>& cell_idx
     return cell.offset();
 }
 
+template<int dim>
+const real Scene<dim>::ComputeElasticEnergy(const std::vector<real>& velocity_field) const {
+    const int velocity_num = shape_.node_num_prod() * dim;
+    CheckError(static_cast<int>(velocity_field.size()) == velocity_num, "velocity_field has wrong size.");
+    VectorXr u_and_lambda = VectorXr::Zero(KC_.rows());
+    u_and_lambda.head(velocity_num) = ToEigenVector(velocity_field);
+    return u_and_lambda.dot(KC_ * u_and_lambda) / 2;
+}
+
+template<int dim>
+const std::vector<real> Scene<dim>::ComputeElasticEnergyVelocityGradient(const std::vector<real>& velocity_field) const {
+    const int velocity_num = shape_.node_num_prod() * dim;
+    CheckError(static_cast<int>(velocity_field.size()) == velocity_num, "velocity_field has wrong size.");
+    // K * u.
+    VectorXr u_and_lambda = VectorXr::Zero(KC_.rows());
+    u_and_lambda.head(velocity_num) = ToEigenVector(velocity_field);
+    return ToStdVector((KC_ * u_and_lambda).head(velocity_num));
+}
+
+template<int dim>
+const std::vector<real> Scene<dim>::ComputeElasticEnergyParameterGradient(const std::vector<real>& velocity_field) const {
+    const int velocity_num = shape_.node_num_prod() * dim;
+    CheckError(static_cast<int>(velocity_field.size()) == velocity_num, "velocity_field has wrong size.");
+    const int param_num = shape_.param_num();
+    std::vector<real> param_gradients(param_num, 0);
+    for (int p = 0; p < param_num; ++p) {
+        // 0.5 * u * dK * u.
+        for (const auto& triplet : dKC_nonzeros_[p]) {
+            const int row = triplet.row();
+            const int col = triplet.col();
+            const real val = triplet.value();
+            if (row >= velocity_num || col >= velocity_num) continue;
+            param_gradients[p] += velocity_field[row] * val * velocity_field[col] / 2;
+        }
+    }
+    return param_gradients;
+}
+
 template class Scene<2>;
 template class Scene<3>;

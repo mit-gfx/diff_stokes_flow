@@ -95,7 +95,8 @@ if __name__ == '__main__':
         loss /= unit_loss
         grad /= unit_loss
         t_end = time.time()
-        print('loss: {:3.6e}, |grad|: {:3.6e}, time: {:3.6f}s'.format(loss, np.linalg.norm(grad), t_end - t_begin))
+        print('Normalized loss: {:3.6e}, |grad|: {:3.6e}, time: {:3.6f}s'.format(
+            loss, np.linalg.norm(grad), t_end - t_begin))
         return loss, grad
 
     if enable_grad_check:
