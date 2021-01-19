@@ -1,6 +1,6 @@
 seed: 42
 sample_num: 10
-solver: pardiso
+solver: eigen
 rel_tol: 1e-5
 max_iter: 50
 enable_grad_check: True

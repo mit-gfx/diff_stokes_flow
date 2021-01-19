@@ -21,6 +21,9 @@ class PipeEnv2d(EnvBase):
         cx, cy = cell_nums
         assert cx == cy
         nx, ny = cx + 1, cy + 1
+        self._velocity_type = 'quadratic'   # 'quadratic' or 'const'.
+        # Initialize the interface.
+        self._interface_boundary_type = 'no-slip'   # Choose 'no-slip' or 'free-slip'.
 
         inlet_velocity = 1
         inlet_range = ndarray([0.7, 0.9])
@@ -35,18 +38,21 @@ class PipeEnv2d(EnvBase):
 
         for j in range(cy + 1):
             if inlet_lb <= j <= inlet_ub:
+                # Compute the quadratic profile.
                 # j = inlet_lb: nj = -1.
                 # j = inlet_ub: nj = 1.
-                v = inlet_velocity
+                if self._velocity_type == 'const':
+                    v = inlet_velocity
+                elif self._velocity_type == 'quadratic':
+                    nj = (j / cy - 0.8) / 0.1
+                    v = (1 - nj ** 2) * inlet_velocity
+                else:
+                    raise NotImplementedError
                 self._node_boundary_info.append(((0, j, 0), v))
                 self._node_boundary_info.append(((0, j, 1), 0))
 
-        # Initialize the interface.
-        self._interface_boundary_type = 'free-slip'
-
         # Other data members.
-        self._inlet_velocity = ndarray([inlet_velocity, 0])
-        self._outlet_velocity = ndarray([0, -inlet_velocity])
+        self._inlet_velocity = inlet_velocity
         self._inlet_lb = inlet_lb
         self._inlet_ub = inlet_ub
         self._outlet_lb = outlet_lb
@@ -93,10 +99,19 @@ class PipeEnv2d(EnvBase):
         cnt = 0
         loss = 0
         nx, _ = self._node_nums
+        cx, cy = self._cell_nums
         for i in range(nx):
             if self._outlet_lb <= i <= self._outlet_ub:
                 cnt += 1
-                u_diff = ndarray(u_field[i, 0]) - self._outlet_velocity
+                # Compute the quadratic profile.
+                if self._velocity_type == 'const':
+                    v = self._inlet_velocity
+                elif self._velocity_type == 'quadratic':
+                    nj = (i / cy - 0.8) / 0.1
+                    v = (1 - nj ** 2) * self._inlet_velocity
+                else:
+                    raise NotImplementedError
+                u_diff = ndarray(u_field[i, 0]) - ndarray([0, -v])
                 loss += u_diff.dot(u_diff)
                 grad[i, 0] += 2 * u_diff
         loss /= cnt
